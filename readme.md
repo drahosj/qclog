@@ -13,3 +13,8 @@ Dump log:
 - Logging
 - Dupe checking
 - Disaster recovery log (write-only)
+
+## To Do
+- Hamlib support to get band/mode/frequency (high priority)
+- Dupe checking against remote logs
+- Edit/Modify support in UI (meh priority)
