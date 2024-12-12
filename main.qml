@@ -11,18 +11,30 @@ Window {
 
     signal doLog(string callsign, string band, string mode, string exch)
     signal checkDupe(string callsign, string band, string mode)
+    signal updateRigData()
 
-    function setup(band, mode, operator) {
+    function populateRigData(band, mode, freq) {
         bandOut.text = band;
 	modeOut.text = mode;
+	frequencyOut.text = freq;
+    }
+
+    function setup(operator) {
 	mycallOut.text = operator;
         callIn.focus = true;
+	root.updateRigData();
     }
 
     function setStatus(text) {
         statusOut.text = text;
         statusBox.visible = true;
     }
+
+    Timer {
+        interval: 2000; running: true; repeat: true
+        onTriggered: root.updateRigData()
+    }
+
 
     RowLayout {
         spacing: 0
