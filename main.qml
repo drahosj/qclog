@@ -12,12 +12,15 @@ Window {
     signal doLog(string callsign, string band, string mode, string exch)
     signal checkDupe(string callsign, string band, string mode)
 
-    function setup() {
+    function setup(band, mode, operator) {
+        bandOut.text = band;
+	modeOut.text = mode;
+	mycallOut.text = operator;
         callIn.focus = true;
     }
 
-    function dupeDetected() {
-        statusOut.text = "Duplicate!"
+    function setStatus(text) {
+        statusOut.text = text;
         statusBox.visible = true;
     }
 
@@ -81,36 +84,6 @@ Window {
                 font.family: 'monospace'
                 anchors.centerIn: parent
                 text: 'MYCALL'
-            }
-        }
-
-        Rectangle {
-            color: 'teal'
-            Layout.minimumHeight: 45
-            Layout.minimumWidth: 55
-            Layout.maximumWidth: 55
-            Layout.margins: 0
-            Text {
-                id: myclassOut
-                font.pointSize: 20
-                font.family: 'monospace'
-                anchors.centerIn: parent
-                text: '1A'
-            }
-        }
-
-        Rectangle {
-            color: 'plum'
-            Layout.minimumHeight: 45
-            Layout.minimumWidth: 65
-            Layout.maximumWidth: 65
-            Layout.margins: 0
-            Text {
-                id: mysectionOut
-                font.pointSize: 20
-                font.family: 'monospace'
-                anchors.centerIn: parent
-                text: 'ONT'
             }
         }
 
