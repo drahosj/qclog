@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 import sqlite3
 import uuid
 from datetime import datetime
@@ -113,11 +115,14 @@ class Logger:
 
 if __name__ == "__main__":
     from sys import argv
-    name = argv[1]
-    logger = Logger(name)
-    if argv[2] == "-l":
+    if argv[1] == "-l":
+        name = argv[2]
+        logger = Logger(name)
         logger.dump_log()
         exit()
+
+    name = argv[1]
+    logger = Logger(name)
 
     callsign = argv[2]
     band = argv[3]
