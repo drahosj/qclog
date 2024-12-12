@@ -1,0 +1,6 @@
+*.swp
+*.pyc
+venv
+*.db
+*.disaster_log
+__pycache__
