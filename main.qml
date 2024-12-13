@@ -193,6 +193,8 @@ Window {
                 if (call == "" || cls == "" || sec == "") {
                     root.setStatus("Incomplete log entry!");
                 } else {
+                    root.clearStatus("Duplicate entry!");
+                    root.clearStatus("Incomplete log entry!");
                     var exch = {class: cls, section: sec};
                     root.doLog(callIn.text, 
                         bandOut.text, 
@@ -202,8 +204,6 @@ Window {
                     classIn.text = "";
                     sectionIn.text = "";
                     callIn.focus = true;
-                    root.clearStatus("Duplicate entry!");
-                    root.clearStatus("Incomplete log entry!");
                 }
             }
             if (event.key == Qt.Key_Escape) {

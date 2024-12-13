@@ -23,7 +23,8 @@ class LoggerWrapper(QObject):
 
     def log(self, call, band, mode, exch):
         call = call.upper()
-        self.logger.log(call, band, mode, exch, json.dumps(meta))
+        if not self.logger.log(call, band, mode, exch, json.dumps(meta)):
+            self.setStatus.emit("Duplicate entry!")
 
     def check_dupe(self, call, band, mode):
         call = call.upper()
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     logger.setStatus.connect(root.setStatus)
 
     rig = RigWrapper(rig.Rig(model, port))
-    root.updateRigData.connect(rig.getRigData)
+    #root.updateRigData.connect(rig.getRigData)
     rig.updateRigData.connect(root.populateRigData)
 
     root.setup(operator)
