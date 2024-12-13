@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import "helpers.js" as Helpers
 
 Window {
     id: root
@@ -15,19 +16,34 @@ Window {
 
     function populateRigData(band, mode, freq) {
         bandOut.text = band;
-	modeOut.text = mode;
-	frequencyOut.text = freq;
+        modeOut.text = mode;
+        frequencyOut.text = freq;
     }
 
     function setup(operator) {
-	mycallOut.text = operator;
+        mycallOut.text = operator;
         callIn.focus = true;
-	root.updateRigData();
+        root.updateRigData();
     }
 
     function setStatus(text) {
-        statusOut.text = text;
-        statusBox.visible = true;
+        Helpers.addStatusMessage(text);
+        root.updateStatus();
+    }
+
+    function clearStatus(text) {
+        Helpers.deleteStatusMessage(text);
+        root.updateStatus();
+    }
+
+    function updateStatus() {
+        var st = Helpers.getCurrentStatus()
+        if (st != "") {
+            statusOut.text = st;
+            statusBox.visible = true;
+        } else {
+            statusBox.visible = false;
+        }
     }
 
     Timer {
@@ -105,7 +121,7 @@ Window {
             Layout.minimumWidth: 200
             Layout.maximumWidth: 200
             Layout.margins: 0
-	    Layout.leftMargin: 20
+            Layout.leftMargin: 20
             font.pointSize: 20
             font.family: 'monospace'
             font.capitalization: Font.AllUppercase
@@ -114,11 +130,7 @@ Window {
             background: Rectangle {
                 color: callIn.cursorVisible ? 'lightblue' : 'grey'
             }
-	    onTextEdited: function() {
-	        console.log("onTextEdited")
-	        statusBox.visible = false;
-                root.checkDupe(callIn.text, bandOut.text, modeOut.text);
-	    }
+            onTextEdited: Helpers.callInEdited()
         }
 
         TextField {
@@ -154,14 +166,14 @@ Window {
         }
 
         Rectangle {
-	    id: statusBox
+            id: statusBox
             color: 'red'
             Layout.minimumHeight: 45
             Layout.minimumWidth: 240
             Layout.maximumWidth: 240
-	    Layout.margins: 0
+            Layout.margins: 0
             Layout.leftMargin: 20
-	    visible: false
+            visible: false
             Text {
                 id: statusOut
                 font.pointSize: 12
@@ -175,32 +187,32 @@ Window {
             console.log("Key press passed to layout " + event.key);
             if (event.key == Qt.Key_Return) {
                 console.log("Enter pressed");
-		var call = callIn.text;
-		var cls = classIn.text;
-		var sec = sectionIn.text;
-		if (call == "" || cls == "" || sec == "") {
-		    statusOut.text = "Incomplete log entry!"
-		    statusBox.visible = true;
-		} else {
-		    var exch = {class: cls, section: sec};
-		    root.doLog(callIn.text, 
-		        bandOut.text, 
-		        modeOut.text,
-		        JSON.stringify(exch));
-		    callIn.text = "";
-		    classIn.text = "";
-		    sectionIn.text = "";
-		    callIn.focus = true;
-		    statusBox.visible = false;
-	        }
+                var call = callIn.text;
+                var cls = classIn.text;
+                var sec = sectionIn.text;
+                if (call == "" || cls == "" || sec == "") {
+                    root.setStatus("Incomplete log entry!");
+                } else {
+                    var exch = {class: cls, section: sec};
+                    root.doLog(callIn.text, 
+                        bandOut.text, 
+                        modeOut.text,
+                        JSON.stringify(exch));
+                    callIn.text = "";
+                    classIn.text = "";
+                    sectionIn.text = "";
+                    callIn.focus = true;
+                    root.clearStatus("Duplicate entry!");
+                    root.clearStatus("Incomplete log entry!");
+                }
             }
             if (event.key == Qt.Key_Escape) {
                 console.log("Escape pressed");
                 callIn.text = "";
                 classIn.text = "";
                 sectionIn.text = "";
-                callIn.focus = true;
-		statusBox.visible = false;
+                root.clearStatus("Duplicate entry!");
+                root.clearStatus("Incomplete log entry!");
             }
         }
     }
