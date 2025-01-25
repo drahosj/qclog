@@ -85,6 +85,7 @@ class Logger:
             qso_id, datetime.now().isoformat(), callsign,
             band, mode, exchange, meta)
         self.disaster_log.write(entry)
+        self.disaster_log.flush()
         print(f"Logged: {entry}")
 
         data = [str(qso_id), callsign, band, mode, exchange, meta]

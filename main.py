@@ -11,7 +11,8 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 import logger
-import rig
+#import rig
+import flrig as rig
 
 class LoggerWrapper(QObject):
     setStatus = Signal(str)
@@ -40,20 +41,32 @@ class RigWrapper(QObject):
         self.rig = rig
 
     def getRigData(self):
+#        print("In getRigData")
         band = self.rig.get_band()
         mode = self.rig.get_mode()
         freq = str(self.rig.get_freq())
         self.updateRigData.emit(band, mode, freq)
+#        print(f"updateRigData(%s, %s, %s) emitted" % (band, mode, freq))
 
 if __name__ == "__main__":
-    if len(sys.argv) < 5:
-        print("./main.py <logname> <serialport> <rig_model> <operator>")
+    #if len(sys.argv) < 5:
+    #    print("./main.py <logname> <serialport> <rig_model> <operator>")
+    #    exit(-1)
+
+    if len(sys.argv) < 3:
+        print("./main.py <logname> <operator>")
         exit(-1)
 
     sys.argv.pop(0)
     logname = sys.argv.pop(0)
-    port = sys.argv.pop(0)
-    model = int(sys.argv.pop(0))
+    ## for hamlib
+    #port = sys.argv.pop(0)
+    #model = int(sys.argv.pop(0))
+
+    # for flrig
+    #host = sys.argv.pop(0)
+    #port = sys.argv.pop(0)
+
     operator = sys.argv.pop(0).upper()
     meta = {"operator" : operator}
 
@@ -70,8 +83,9 @@ if __name__ == "__main__":
     root.checkDupe.connect(logger.check_dupe)
     logger.setStatus.connect(root.setStatus)
 
-    rig = RigWrapper(rig.Rig(model, port))
-    #root.updateRigData.connect(rig.getRigData)
+    #rig = RigWrapper(rig.Rig(model, port))
+    rig = RigWrapper(rig.Rig())
+    root.updateRigData.connect(rig.getRigData)
     rig.updateRigData.connect(root.populateRigData)
 
     root.setup(operator)

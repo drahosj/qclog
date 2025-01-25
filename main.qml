@@ -213,6 +213,7 @@ Window {
                 sectionIn.text = "";
                 root.clearStatus("Duplicate entry!");
                 root.clearStatus("Incomplete log entry!");
+		callIn.focus = true;
             }
         }
     }
