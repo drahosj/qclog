@@ -1,7 +1,16 @@
 ## Quick start
+
+`git clone https://github.com/drahosj/quicklog`
+
+`cd quicklog`
+
+`python3 -m venv venv`
+
+`source venv/bin/activate`
+
 `pip install -r requirements.txt`
 
-`./main.py <logname> <band> <mode> <operator>`
+`./main.py <logname> <operator>`
 
 Enter to log, escape to clear, tab to cycle fields
 
