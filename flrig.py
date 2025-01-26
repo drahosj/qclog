@@ -7,7 +7,10 @@ class Rig:
         self.server = xmlrpc.client.ServerProxy(f"http://%s:%s" % (host, port))
 
     def get_freq(self):
-        return int(self.server.rig.get_vfoA())
+        try:
+            return int(self.server.rig.get_vfoA())
+        except ConnectionRefusedError as e:
+            raise RigCommError
 
     def get_mode(self):
         return self.server.rig.get_mode()
@@ -33,3 +36,6 @@ class Rig:
             return "2M"
         else:
             return "?BAND"
+
+class RigCommError(Exception):
+    pass

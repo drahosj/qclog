@@ -5,14 +5,10 @@ import "helpers.js" as Helpers
 
 Window {
     id: root
-    width: 640
+    width: 800
     height: 45
     visible: true
     title: qsTr("Minimal Logger")
-
-    signal doLog(string callsign, string band, string mode, string exch)
-    signal checkDupe(string callsign, string band, string mode)
-    signal updateRigData()
 
     function populateRigData(band, mode, freq) {
         bandOut.text = band;
@@ -23,7 +19,7 @@ Window {
     function setup(operator) {
         mycallOut.text = operator;
         callIn.focus = true;
-        root.updateRigData();
+        rig.refreshRigData();
     }
 
     function setStatus(text) {
@@ -48,7 +44,7 @@ Window {
 
     Timer {
         interval: 2000; running: true; repeat: true
-        onTriggered: root.updateRigData()
+        onTriggered: rig.refreshRigData
     }
 
 
@@ -130,7 +126,9 @@ Window {
             background: Rectangle {
                 color: callIn.cursorVisible ? 'lightblue' : 'grey'
             }
-            onTextEdited: Helpers.callInEdited()
+            onTextEdited: function() {
+                logger.checkDupe(callIn.text, bandOut.text, modeOut.text);
+            }
         }
 
         TextField {
@@ -191,12 +189,12 @@ Window {
                 var cls = classIn.text;
                 var sec = sectionIn.text;
                 if (call == "" || cls == "" || sec == "") {
-                    root.setStatus("Incomplete log entry!");
+                    root.setStatus("incomplete");
                 } else {
-                    root.clearStatus("Duplicate entry!");
-                    root.clearStatus("Incomplete log entry!");
+                    root.clearStatus("duplicate");
+                    root.clearStatus("incomplete");
                     var exch = {class: cls, section: sec};
-                    root.doLog(callIn.text, 
+                    logger.log(callIn.text, 
                         bandOut.text, 
                         modeOut.text,
                         JSON.stringify(exch));
@@ -211,9 +209,9 @@ Window {
                 callIn.text = "";
                 classIn.text = "";
                 sectionIn.text = "";
-                root.clearStatus("Duplicate entry!");
-                root.clearStatus("Incomplete log entry!");
-		callIn.focus = true;
+                root.clearStatus("duplicate");
+                root.clearStatus("incomplete");
+                callIn.focus = true;
             }
         }
     }

@@ -1,25 +1,29 @@
-var statusMessage = [];
+var activeMessages = {
+    duplicate: false,
+    incomplete: false,
+    rigerror: false
+}
 
 function addStatusMessage(message) {
     console.log("addStatusMessage(): message: " + message);
-    statusMessage.push(message);
-    console.log("addStatusMessage(): Status messages: " + statusMessage);
+    activeMessages[message] = true;
+    console.log("addStatusMessage(): Status messages: " + JSON.stringify(activeMessages));
 }
 
 function deleteStatusMessage(message) {
     console.log("deleteStatusMessage(): message: " + message);
-    console.log("deleteStatusMessage(): Status messages: " + statusMessage);
-    var i;
-    while ((i = statusMessage.indexOf(message)) != -1) {
-        statusMessage.splice(i, 1);
-    }
-    console.log("deleteStatusMessage(): Status messages: " + statusMessage);
+    activeMessages[message] = false;
+    console.log("deleteStatusMessage(): Status messages: " + JSON.stringify(activeMessages));
 }
 
 function getCurrentStatus() {
-    console.log("getCurrentStatus(): Status messages: " + statusMessage);
-    if (statusMessage.length) {
-        return statusMessage[statusMessage.length - 1];
+    console.log("deleteStatusMessage(): Status messages: " + JSON.stringify(activeMessages));
+    if (activeMessages.duplicate) {
+        return "Duplicate entry!";
+    } else if (activeMessages.incomplete) {
+        return "Incomplete entry!";
+    } else if (activeMessages.rigerror) {
+        return "Rig communication error!";
     } else {
         return "";
     }
@@ -27,6 +31,4 @@ function getCurrentStatus() {
 
 function callInEdited() {
     console.log("callInEdited");
-    root.clearStatus("Duplicate entry!");
-    root.checkDupe(callIn.text, bandOut.text, modeOut.text);
 }

@@ -6,66 +6,66 @@ import json
 
 from pathlib import Path
 
-from PySide6.QtCore import Signal, QObject
+from PySide6.QtCore import Signal, QObject, Slot
 from PySide6.QtGui import QGuiApplication
-from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtQml import QQmlApplicationEngine, QmlElement
 
 import logger
 #import rig
-import flrig as rig
+import flrig
 
 class LoggerWrapper(QObject):
     setStatus = Signal(str)
+    clearStatus = Signal(str)
 
     def __init__(self, logger, meta=None, parent=None):
         super().__init__(parent)
         self.logger = logger
         self.meta = meta
 
+    @Slot(str, str, str, str)
     def log(self, call, band, mode, exch):
         call = call.upper()
         if not self.logger.log(call, band, mode, exch, json.dumps(meta)):
-            self.setStatus.emit("Duplicate entry!")
+            self.setStatus.emit("duplicate")
 
-    def check_dupe(self, call, band, mode):
+    @Slot(str, str, str)
+    def checkDupe(self, call, band, mode):
         call = call.upper()
         print(f"Checking dupe {call} {band} {mode}")
         if self.logger.dupe_check(call, band, mode):
             print("Duplicate!")
-            self.setStatus.emit("Duplicate entry!")
+            self.setStatus.emit("duplicate")
+        else:
+            self.clearStatus.emit("duplicate")
 
 class RigWrapper(QObject):
-    updateRigData = Signal(str, str, str)
+    updatedRigData = Signal(str, str, str)
+    setStatus = Signal(str)
+    clearStatus = Signal(str)
+
     def __init__(self, rig, parent=None):
         super().__init__(parent)
         self.rig = rig
 
-    def getRigData(self):
-#        print("In getRigData")
-        band = self.rig.get_band()
-        mode = self.rig.get_mode()
-        freq = str(self.rig.get_freq())
-        self.updateRigData.emit(band, mode, freq)
-#        print(f"updateRigData(%s, %s, %s) emitted" % (band, mode, freq))
+    @Slot()
+    def refreshRigData(self):
+        try:
+            band = self.rig.get_band()
+            mode = self.rig.get_mode()
+            freq = str(self.rig.get_freq())
+            self.updatedRigData.emit(band, mode, freq)
+            self.clearStatus.emit("rigerror")
+        except flrig.RigCommError as e:
+            self.setStatus.emit("rigerror")
 
 if __name__ == "__main__":
-    #if len(sys.argv) < 5:
-    #    print("./main.py <logname> <serialport> <rig_model> <operator>")
-    #    exit(-1)
-
     if len(sys.argv) < 3:
         print("./main.py <logname> <operator>")
         exit(-1)
 
     sys.argv.pop(0)
     logname = sys.argv.pop(0)
-    ## for hamlib
-    #port = sys.argv.pop(0)
-    #model = int(sys.argv.pop(0))
-
-    # for flrig
-    #host = sys.argv.pop(0)
-    #port = sys.argv.pop(0)
 
     operator = sys.argv.pop(0).upper()
     meta = {"operator" : operator}
@@ -78,15 +78,19 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     root = engine.rootObjects()[0]
+    context = engine.rootContext()
+
     logger = LoggerWrapper(logger.Logger(logname), meta)
-    root.doLog.connect(logger.log)
-    root.checkDupe.connect(logger.check_dupe)
+    context.setContextProperty("logger", logger)
     logger.setStatus.connect(root.setStatus)
+    logger.clearStatus.connect(root.clearStatus)
 
     #rig = RigWrapper(rig.Rig(model, port))
-    rig = RigWrapper(rig.Rig())
-    root.updateRigData.connect(rig.getRigData)
-    rig.updateRigData.connect(root.populateRigData)
+    rig = RigWrapper(flrig.Rig())
+    context.setContextProperty("rig", rig)
+    rig.updatedRigData.connect(root.populateRigData)
+    rig.setStatus.connect(root.setStatus)
+    rig.clearStatus.connect(root.clearStatus)
 
     root.setup(operator)
     sys.exit(app.exec())
