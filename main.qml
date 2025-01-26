@@ -42,11 +42,17 @@ Window {
         }
     }
 
-    Timer {
-        interval: 2000; running: true; repeat: true
-        onTriggered: rig.refreshRigData
+    function populateEntry(call, exch) {
+        callIn.text = call;
+        exch = JSON.parse(exch);
+        classIn.text = exch['class'];
+        sectionIn.text = exch['section'];
     }
 
+    Timer {
+        interval: 2000; running: true; repeat: true
+        onTriggered: rig.refreshRigData()
+    }
 
     RowLayout {
         spacing: 0
@@ -181,38 +187,35 @@ Window {
             }
         }
 
-        Keys.onPressed: (event) => {
-            console.log("Key press passed to layout " + event.key);
-            if (event.key == Qt.Key_Return) {
-                console.log("Enter pressed");
-                var call = callIn.text;
-                var cls = classIn.text;
-                var sec = sectionIn.text;
-                if (call == "" || cls == "" || sec == "") {
-                    root.setStatus("incomplete");
-                } else {
-                    root.clearStatus("duplicate");
-                    root.clearStatus("incomplete");
-                    var exch = {class: cls, section: sec};
-                    logger.log(callIn.text, 
-                        bandOut.text, 
-                        modeOut.text,
-                        JSON.stringify(exch));
-                    callIn.text = "";
-                    classIn.text = "";
-                    sectionIn.text = "";
-                    callIn.focus = true;
-                }
-            }
-            if (event.key == Qt.Key_Escape) {
-                console.log("Escape pressed");
+        Keys.onReturnPressed: function() {
+            console.log("Return pressed");
+            var call = callIn.text;
+            var cls = classIn.text;
+            var sec = sectionIn.text;
+            if (call == "" || cls == "" || sec == "") {
+                root.setStatus("incomplete");
+            } else {
+                root.clearStatus("duplicate");
+                root.clearStatus("incomplete");
+                var exch = {class: cls, section: sec};
+                logger.log(callIn.text, 
+                    bandOut.text, 
+                    modeOut.text,
+                    JSON.stringify(exch));
                 callIn.text = "";
                 classIn.text = "";
                 sectionIn.text = "";
-                root.clearStatus("duplicate");
-                root.clearStatus("incomplete");
                 callIn.focus = true;
             }
+        }
+        Keys.onEscapePressed: function() {
+            console.log("Escape pressed");
+            callIn.text = "";
+            classIn.text = "";
+            sectionIn.text = "";
+            root.clearStatus("duplicate");
+            root.clearStatus("incomplete");
+            callIn.focus = true;
         }
     }
 }

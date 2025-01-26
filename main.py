@@ -17,6 +17,7 @@ import flrig
 class LoggerWrapper(QObject):
     setStatus = Signal(str)
     clearStatus = Signal(str)
+    populateEntry = Signal(str, str)
 
     def __init__(self, logger, meta=None, parent=None):
         super().__init__(parent)
@@ -38,6 +39,13 @@ class LoggerWrapper(QObject):
             self.setStatus.emit("duplicate")
         else:
             self.clearStatus.emit("duplicate")
+
+    @Slot()
+    def undoLast(self):
+        call, exch = self.logger.undo_last()
+        print(f"Last undone #{call} (#{exch})")
+        self.populateEntry.emit(call, exch)
+        
 
 class RigWrapper(QObject):
     updatedRigData = Signal(str, str, str)
