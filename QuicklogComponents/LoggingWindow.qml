@@ -19,9 +19,6 @@ Window {
     property alias frequencyOut: frequencyOut
     property alias operatorOut: operatorOut
 
-    signal submit
-    signal clear
-
     function populateRigData(band, mode, freq) {
         bandOut.text = band;
         modeOut.text = mode;
@@ -44,6 +41,16 @@ Window {
         root.updateStatus();
     }
 
+    function logged(uuid) {
+        if (uuid) {
+            console.log("UI got response of logged qso " + uuid);
+            root.clearFields();
+        } else {
+            console.log("Logger rejected qso.");
+            root.setStatus('duplicate');
+        }
+    }
+
     function updateStatus() {
         var st = Helpers.getCurrentStatus()
         if (st != "") {
@@ -53,6 +60,15 @@ Window {
             statusBox.visible = false;
         }
     }
+
+    function clearFields() {
+        callIn.text = '';
+        callIn.focus = true;
+        root.clearStatus("duplicate");
+        root.clearStatus("incomplete");
+        root.clear();
+    }
+
 
     Timer {
         interval: 2000; running: true; repeat: true
@@ -121,14 +137,36 @@ Window {
             }
         }
 
-        Keys.onPressed: (event) => {
-            console.log("Key press passed to layout " + event.key);
-            if (event.key == Qt.Key_Return) {
-                root.submit()
+        Keys.onReturnPressed: (event) => {
+            var exch = {};
+            var call = callIn.text;
+            var force = event.modifiers & Qt.ControlModifier;
+            if ((call != '') && (root.submit(exch) || force)) {
+                var meta = {operator: operatorOut.text,
+                            frequency: frequencyOut.text};
+                root.clearStatus("duplicate");
+                root.clearStatus("incomplete");
+
+                logger.log(callIn.text, 
+                    bandOut.text, 
+                    modeOut.text,
+                    JSON.stringify(exch),
+                    JSON.stringify(meta), force);
             }
+            event.accepted = true;
+        }
+
+        Keys.onEscapePressed: (event) => {
+            clearFields();
+            event.accepted = true;
+        }
+
+        /*
+        Keys.onPressed: (event) => {
             if (event.key == Qt.Key_Escape) {
                 root.clear()
             }
         }
+        */
     }
 }

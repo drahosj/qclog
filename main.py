@@ -17,19 +17,21 @@ import flrig
 class LoggerWrapper(QObject):
     setStatus = Signal(str)
     clearStatus = Signal(str)
+    logResponse = Signal(str)
 
     def __init__(self, logger, meta={}, parent=None):
         super().__init__(parent)
         self.logger = logger
         self.meta = {}
 
-    @Slot(str, str, str, str, str)
-    def log(self, call, band, mode, exch, meta):
+    @Slot(str, str, str, str, str, bool)
+    def log(self, call, band, mode, exch, meta, force):
         self.meta.update(json.loads(meta))
 
         call = call.upper()
-        if not self.logger.log(call, band, mode, exch, json.dumps(self.meta)):
-            self.setStatus.emit("duplicate")
+        qso_id = self.logger.log(call, band, mode, exch, json.dumps(self.meta),
+                               force)
+        self.logResponse.emit(qso_id)
 
     @Slot(str, str, str)
     def checkDupe(self, call, band, mode):
@@ -85,6 +87,7 @@ if __name__ == "__main__":
     context.setContextProperty("logger", logger)
     logger.setStatus.connect(root.setStatus)
     logger.clearStatus.connect(root.clearStatus)
+    logger.logResponse.connect(root.logged)
 
     #rig = RigWrapper(rig.Rig(model, port))
     rig = RigWrapper(flrig.Rig())

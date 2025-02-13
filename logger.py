@@ -80,7 +80,7 @@ class Logger:
     def log(self, callsign, band, mode, exchange, meta=None, force=False):
         cur = self.conn.cursor()
         if (not force) and self.dupe_check(callsign, band, mode):
-            return False
+            return None
         qso_id = uuid.uuid4()
         entry = "%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
             qso_id, datetime.now().isoformat(), callsign,
@@ -95,7 +95,7 @@ class Logger:
                 (id, timestamp, callsign, band, mode, exchange, meta) 
             VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?);""", data)
         self.conn.commit()
-        return True
+        return str(qso_id)
 
     def dupe_check(self, callsign, band, mode):
         cur = self.conn.cursor()
