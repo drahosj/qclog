@@ -3,6 +3,7 @@
 # This Python file uses the following encoding: utf-8
 import sys
 import json
+import argparse
 
 from pathlib import Path
 
@@ -91,18 +92,22 @@ class RigWorker(QObject):
             self.rigError.emit()
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("./main.py <logname> <operator>")
-        exit(-1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('log', help='Name of database and log files',
+                        default='qclog-defaultlog')
+    parser.add_argument('-i', '--interface', default='fd')
+    parser.add_argument('-o', '--operator')
+    parser.add_argument('-b', '--band')
+    parser.add_argument('-m', '--mode')
+    parser.add_argument('-f', '--frequency')
+    parser.add_argument('--flrig', help='Enable flrig', action='store_true')
 
-    sys.argv.pop(0)
-    logname = sys.argv.pop(0)
-
-    operator = sys.argv.pop(0).upper()
+    args = parser.parse_args(sys.argv[1:])
 
     app = QGuiApplication(sys.argv)
     engine = QQmlApplicationEngine()
-    qml_file = Path(__file__).resolve().parent / "main.qml"
+    iface_dir =  Path(__file__).resolve().parent / "Interfaces"
+    qml_file = iface_dir / f"{args.interface}.qml"
     engine.load(qml_file)
     if not engine.rootObjects():
         sys.exit(-1)
@@ -110,18 +115,20 @@ if __name__ == "__main__":
     root = engine.rootObjects()[0]
     context = engine.rootContext()
 
-    logger = LoggerWrapper(logger.Logger(logname))
+    logger = LoggerWrapper(logger.Logger(args.log))
     context.setContextProperty("logger", logger)
     logger.setStatus.connect(root.setStatus)
     logger.clearStatus.connect(root.clearStatus)
     logger.logResponse.connect(root.logged)
 
-    #rig = RigWrapper(rig.Rig(model, port))
-    rig = RigWrapper(flrig.Rig())
-    context.setContextProperty("rig", rig)
-    rig.updatedRigData.connect(root.populateRigData)
-    rig.setStatus.connect(root.setStatus)
-    rig.clearStatus.connect(root.clearStatus)
+    if args.flrig:
+        rig = RigWrapper(flrig.Rig())
+        context.setContextProperty("rig", rig)
+        rig.updatedRigData.connect(root.populateRigData)
+        rig.setStatus.connect(root.setStatus)
+        rig.clearStatus.connect(root.clearStatus)
+    else:
+        root.populateRigData(args.band, args.mode, args.frequency)
 
-    root.setup(operator)
+    root.setup(args.operator)
     sys.exit(app.exec())

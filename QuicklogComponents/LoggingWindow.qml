@@ -20,15 +20,22 @@ Window {
     property alias operatorOut: operatorOut
 
     function populateRigData(band, mode, freq) {
-        bandOut.text = band;
-        modeOut.text = mode;
-        frequencyOut.text = freq;
+        if (band) {
+            bandOut.text = band;
+        }
+        if (mode) {
+            modeOut.text = mode;
+        }
+        if (freq) {
+            frequencyOut.text = freq;
+        }
     }
 
     function setup(operator) {
-        operatorOut.text = operator;
+        if (operator) {
+            operatorOut.text = operator;
+        }
         callIn.focus = true;
-        rig.refreshRigData();
     }
 
     function setStatus(text) {

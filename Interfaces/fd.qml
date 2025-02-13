@@ -1,5 +1,5 @@
 import QtQuick.Layouts
-import "QuicklogComponents"
+import "../QuicklogComponents"
 
 LoggingWindow {
     id: root
