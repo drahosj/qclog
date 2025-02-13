@@ -61,16 +61,17 @@ The template string is a whitespace-separated list of tokens. Each
 token consists of a literal or template. The supported templates are:
 
 - %C (callsign)
-- %E<key> Key taken from exchange field
-- %M<key> Key taken from metadata field
+- %E\<key\> Key taken from exchange field
+- %M\<key\> Key taken from metadata field
 
 The frequency is currently extracted from the 'band', even if exact frequency is
 available in the metadata
 
 For example, 
-`./logger.py -c 'N0CALL:13 2A:2 IA:2 %C:13 %Eclass:2 %Esection:2'`
+`./logger.py -c 'N0CALL:13 2A:2 IA:2 %C:13 %Eclass:2 %Esection:2' fd`
 
 will export a field-day style Cabrillo log, consisting of standard QSO lines
 with frequency, mode, date, time, and then (as specified by the template string)
 mycall, myclass, mysection (in the template string, these are constants) and
-then the call, class, and section taken from the QSO.
+then the call, class, and section taken from the QSO. The logs will be exported
+from fd.db
