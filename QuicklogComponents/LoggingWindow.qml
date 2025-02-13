@@ -71,7 +71,9 @@ Window {
 
 
     Timer {
-        interval: 2000; running: true; repeat: true
+        interval: 2000
+        running: true 
+        repeat: true
         onTriggered: rig.refreshRigData()
     }
 
