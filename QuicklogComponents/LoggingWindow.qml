@@ -54,30 +54,6 @@ Window {
         }
     }
 
-    Dialog {
-        id: editOperatorDialog
-        title: "Set Operator"
-        modal: true
-        focus: true
-        onOpened: {
-            editOperatorField.focus = true
-        }
-
-        TextField {
-            id: editOperatorField
-            text: operatorOut.text
-            Keys.onReturnPressed: editOperatorDialog.accept()
-        }
-
-        standardButtons: Dialog.Ok
-
-        onAccepted: {
-            operatorOut.text = editOperatorField.text
-        }
-
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-    }
-
     Timer {
         interval: 2000; running: true; repeat: true
         onTriggered: rig.refreshRigData()
@@ -89,28 +65,26 @@ Window {
         OutputField {
             backgroundColor: 'green'
             id: modeOut
-            text: 'SSB'
+            title: 'Mode'
         }
 
         OutputField {
             backgroundColor: 'plum'
             id: bandOut
-            text: '20'
+            title: 'Band'
         }
 
         OutputField {
             backgroundColor: 'teal'
             id: frequencyOut
-            text: '14100000'
+            title: 'Frequency'
         }
 
         OutputField {
             backgroundColor: 'darkgrey'
             Layout.rightMargin: 20
             id: operatorOut
-            text: 'operator'
-
-            onRightClicked: editOperatorDialog.open()
+            title: 'Operator'
         }
 
         LogField {

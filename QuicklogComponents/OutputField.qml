@@ -1,14 +1,15 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import "."
 
 Rectangle {
     id: root
     property alias text: textOut.text
     property alias backgroundColor: root.color
+    property string title: ''
 
-    signal rightClicked()
-
+    text: title
     color: 'grey'
     Layout.minimumHeight: 45
     Layout.minimumWidth: 200
@@ -26,7 +27,11 @@ Rectangle {
         acceptedButtons: Qt.RightButton
 
         onClicked: {
-            root.rightClicked()
+            editDialog.open()
         }
+    }
+
+    EditDialog {
+        id: editDialog
     }
 }
