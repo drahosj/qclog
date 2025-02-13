@@ -2,7 +2,6 @@
 
 import sqlite3
 import uuid
-import json
 from datetime import datetime
 
 class Logger:
@@ -115,85 +114,12 @@ class Logger:
             print(f"{row[1]}\t{row[3]}\t{row[4]}\t{row[2]}\t{row[5]}")
 
 
-    def cabrillo(self, exchfmt):
-        cur = self.conn.cursor()
-        qsos = []
-        for row in cur.execute("SELECT * FROM log;"):
-            dt = datetime.fromisoformat(row[1])
-            date = dt.date().isoformat()
-            time = dt.time().strftime("%H%M")
-            freq = cabrillo_band_map[row[3]].rjust(5)
-            mode = cabrillo_mode_map[row[4]]
-            call = row[2]
-            exch = json.loads(row[5])
-            meta = json.loads(row[6])
-            exch = format_exchange(exchfmt, call, exch, meta)
-            s = f"QSO: {freq} {mode} {date} {time} {exch}"
-            qsos.append(s)
-        return "\n".join(qsos)
-
-cabrillo_band_map = {
-        "160M" : "1800",
-        "80M" : "3500",
-        "40M" : "7000",
-        "20M" : "14000",
-        "15M" : "21000",
-        "10M" : "28000",
-        "6M" : "50",
-        "2M" : "144",
-        }
-
-cabrillo_mode_map = {
-        "LSB" : "PH",
-        "USB" : "PH",
-        "SSB" : "PH",
-        "AM" : "PH",
-        "CW-U" : "CW",
-        "CW-L" : "CW",
-        "DIG-U" : "DG",
-        "DIG-L" : "DG",
-        "DATA-U" : "DG",
-        "DATA-L" : "DG",
-        "DATA" : "DG",
-        "FM" : "FM",
-        "RTTY" : "RY"
-        }
-
-
-def format_exchange(fmt, call, exch, meta):
-    res = []
-    for token in fmt.split():
-        if token[0:2] == '%E':
-            key, width = token[2:].split(':')
-            s = exch[key].upper()
-            res.append(s.ljust(int(width)))
-        elif token[0:2] == '%M':
-            key, width = token[2:].split(':')
-            s = meta[key].upper()
-            res.append(s.ljust(int(width)))
-        elif token[0:2] == '%C':
-            width = token.split(':')[-1]
-            s = call
-            res.append(s.ljust(int(width)))
-        else:
-            s, width = token.split(':')
-            res.append(s.ljust(int(width)))
-    return " ".join(res)
-
-
 if __name__ == "__main__":
     from sys import argv
     if argv[1] == "-l":
         name = argv[2]
         logger = Logger(name)
         logger.dump_log()
-        exit()
-
-    if argv[1] == "-c":
-        fmt = argv[2]
-        name = argv[3]
-        logger = Logger(name)
-        print(logger.cabrillo(fmt))
         exit()
 
     name = argv[1]
