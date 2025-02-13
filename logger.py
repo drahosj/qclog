@@ -4,10 +4,11 @@ import sqlite3
 import uuid
 import json
 from datetime import datetime
+from pathlib import Path
 
 class Logger:
-    def __init__(self, logname):
-        self.conn = sqlite3.connect(f"{logname}.db")
+    def __init__(self, logname, datadir=Path('.')):
+        self.conn = sqlite3.connect(datadir / f"{logname}.db")
         cur = self.conn.cursor()
         cur.execute("""
             SELECT name 
@@ -17,7 +18,7 @@ class Logger:
             self.create_schema()
         cur.close()
         filename = f"{datetime.now().isoformat()}_{logname}.disaster_log"
-        self.disaster_log = open(filename, "a")
+        self.disaster_log = open(datadir / filename, "a")
 
     def close(self):
         self.conn.close()

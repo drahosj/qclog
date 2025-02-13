@@ -157,15 +157,15 @@ Window {
             var force = event.modifiers & Qt.ControlModifier;
             if ((call != '') && (root.submit(exch) || force)) {
                 var meta = {operator: operatorOut.text,
-                            frequency: frequencyOut.text};
+                frequency: frequencyOut.text};
                 root.clearStatus("duplicate");
                 root.clearStatus("incomplete");
 
                 logger.log(callIn.text, 
-                    bandOut.text, 
-                    modeOut.text,
-                    JSON.stringify(exch),
-                    JSON.stringify(meta), force);
+                bandOut.text, 
+                modeOut.text,
+                JSON.stringify(exch),
+                JSON.stringify(meta), force);
             }
             event.accepted = true;
         }
@@ -174,13 +174,5 @@ Window {
             clearFields();
             event.accepted = true;
         }
-
-        /*
-        Keys.onPressed: (event) => {
-            if (event.key == Qt.Key_Escape) {
-                root.clear()
-            }
-        }
-        */
     }
 }

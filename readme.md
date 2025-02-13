@@ -42,13 +42,15 @@ Right click any of the output fields (band/mode/frequency/operator) to change.
 ## Log storage
 Logs are stored in a sqlite database with a relatively simple schema. Logs are
 also dumped to plain append-only log opened on startup for disaster recovery.
-This will pollute the working directory a bit but can be cleaned up.
+
+Default directory for storing logs is `~/.qclog`. `-d`/`--data-dir` can change this.
 
 ## Log export
 The log DB engine (plain Python; no QT dependencies) supports some
-useful functionality on its own. You can dump logs:
+useful functionality on its own. You can dump logs from the log directory 
+(default `~/.qclog`):
 
-`./logger.py -l <logname>`
+`/path/to/logger.py -l <logname>`
 
 The logname should be the same as specified when running the log application.
 

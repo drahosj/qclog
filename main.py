@@ -4,10 +4,11 @@
 import sys
 import json
 import argparse
+import os
 
 from pathlib import Path
 
-from PySide6.QtCore import Signal, QObject, Slot, QThread
+from PySide6.QtCore import Signal, QObject, Slot, QThread, Property
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, QmlElement
 
@@ -19,11 +20,12 @@ class LoggerWrapper(QObject):
     setStatus = Signal(str)
     clearStatus = Signal(str)
     logResponse = Signal(str)
+    last_qso = None
 
     def __init__(self, logger, meta={}, parent=None):
         super().__init__(parent)
         self.logger = logger
-        self.meta = {}
+        self.meta = meta
 
     @Slot(str, str, str, str, str, bool)
     def log(self, call, band, mode, exch, meta, force):
@@ -33,6 +35,8 @@ class LoggerWrapper(QObject):
         qso_id = self.logger.log(call, band, mode, exch, json.dumps(self.meta),
                                force)
         self.logResponse.emit(qso_id)
+        if qso_id is not None:
+            last_qso = qso_id
 
     @Slot(str, str, str)
     def checkDupe(self, call, band, mode):
@@ -43,6 +47,16 @@ class LoggerWrapper(QObject):
             self.setStatus.emit("duplicate")
         else:
             self.clearStatus.emit("duplicate")
+
+    def getLastQso(self):
+        return self.last_qso
+
+    def setLastQso(self, uuid):
+        self.last_qso = uuid
+
+    lastQso = Property(str, getLastQso, setLastQso)
+
+
 
 class RigWrapper(QObject):
     updatedRigData = Signal(str, str, str)
@@ -92,6 +106,8 @@ class RigWorker(QObject):
             self.rigError.emit()
 
 if __name__ == "__main__":
+    default_datadir = Path(os.path.expanduser('~')) / '.qclog'
+
     parser = argparse.ArgumentParser()
     parser.add_argument('log', help='Name of database and log files',
                         default='qclog-defaultlog')
@@ -101,6 +117,8 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--mode')
     parser.add_argument('-f', '--frequency')
     parser.add_argument('--flrig', help='Enable flrig', action='store_true')
+    parser.add_argument('-d', '--data-dir', help='Directory for logs and db',
+                        default=default_datadir)
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -115,7 +133,12 @@ if __name__ == "__main__":
     root = engine.rootObjects()[0]
     context = engine.rootContext()
 
-    logger = LoggerWrapper(logger.Logger(args.log))
+    print(f"Storing logs in {args.data_dir}.")
+    if not os.path.exists(args.data_dir):
+        print(f"{args.data_dir} doesn't exist, creating.")
+        os.makedirs(args.data_dir)
+
+    logger = LoggerWrapper(logger.Logger(args.log, Path(args.data_dir)))
     context.setContextProperty("logger", logger)
     logger.setStatus.connect(root.setStatus)
     logger.clearStatus.connect(root.clearStatus)
