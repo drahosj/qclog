@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import "QuicklogComponents"
 import "helpers.js" as Helpers
 
 Window {
@@ -111,21 +112,11 @@ Window {
             }
         }
 
-        TextField {
+        LogField {
             id: callIn
-            Layout.minimumHeight: 45
             Layout.minimumWidth: 200
-            Layout.maximumWidth: 200
-            Layout.margins: 0
-            Layout.leftMargin: 20
-            font.pointSize: 20
             font.family: 'monospace'
-            font.capitalization: Font.AllUppercase
             placeholderText: 'CALL'
-            placeholderTextColor: 'white'
-            background: Rectangle {
-                color: callIn.cursorVisible ? 'lightblue' : 'grey'
-            }
             onTextEdited: function() {
                 logger.checkDupe(callIn.text, bandOut.text, modeOut.text);
             }
@@ -195,9 +186,9 @@ Window {
                     root.clearStatus("incomplete");
                     var exch = {class: cls, section: sec};
                     logger.log(callIn.text, 
-                        bandOut.text, 
-                        modeOut.text,
-                        JSON.stringify(exch));
+                    bandOut.text, 
+                    modeOut.text,
+                    JSON.stringify(exch));
                     callIn.text = "";
                     classIn.text = "";
                     sectionIn.text = "";
