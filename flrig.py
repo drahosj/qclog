@@ -8,7 +8,10 @@ class Rig:
 
     def get_freq(self):
         try:
-            return int(self.server.rig.get_vfoA())
+            print("Updating frequency from rig")
+            freq =  int(self.server.rig.get_vfoA())
+            print("Got frequency: ", freq)
+            return(freq)
         except ConnectionRefusedError as e:
             raise RigCommError
 
