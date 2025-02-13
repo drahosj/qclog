@@ -1,8 +1,5 @@
-import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import "QuicklogComponents"
-import "helpers.js" as Helpers
 
 LoggingWindow {
     id: root

@@ -7,6 +7,8 @@ Rectangle {
     property alias text: textOut.text
     property alias backgroundColor: root.color
 
+    signal rightClicked()
+
     color: 'grey'
     Layout.minimumHeight: 45
     Layout.minimumWidth: 200
@@ -18,5 +20,13 @@ Rectangle {
         font.family: 'monospace'
         anchors.centerIn: parent
     }
-}
 
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+
+        onClicked: {
+            root.rightClicked()
+        }
+    }
+}
