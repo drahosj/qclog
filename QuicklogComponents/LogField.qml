@@ -13,7 +13,6 @@ TextField {
     bgActive: 'lightblue'
     bgInactive: 'grey'
 
-
     Layout.minimumHeight: parent.height
     Layout.margins: 0
     font.pointSize: 20

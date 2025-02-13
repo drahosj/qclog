@@ -6,7 +6,7 @@ Dialog {
     id: root
     modal: true
     focus: true
-    title: 'Set ' + parent.editTitle
+    title: 'Set ' + parent.title
     onOpened: {
         editField.focus = true
         editField.selectAll()
