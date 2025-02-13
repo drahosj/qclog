@@ -21,9 +21,7 @@ It should be good to go.
 ## Running
 From the QCLog directory
 
-`source venv/bin/activate`
-
-`pip install -r requirements.txt`
+`source venv/bin/activate` (if not already active)
 
 `./main.py <name-of-log-file>`
 
