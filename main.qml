@@ -34,10 +34,13 @@ LoggingWindow {
             root.clearStatus("duplicate");
             root.clearStatus("incomplete");
             var exch = {class: cls, section: sec};
+            var meta = {operator: operatorOut.text,
+                        frequency: frequencyOut.text};
             logger.log(callIn.text, 
-            bandOut.text, 
-            modeOut.text,
-            JSON.stringify(exch));
+                bandOut.text, 
+                modeOut.text,
+                JSON.stringify(exch),
+                JSON.stringify(meta));
             callIn.text = "";
             classIn.text = "";
             sectionIn.text = "";

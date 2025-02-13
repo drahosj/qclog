@@ -18,15 +18,17 @@ class LoggerWrapper(QObject):
     setStatus = Signal(str)
     clearStatus = Signal(str)
 
-    def __init__(self, logger, meta=None, parent=None):
+    def __init__(self, logger, meta={}, parent=None):
         super().__init__(parent)
         self.logger = logger
-        self.meta = meta
+        self.meta = {}
 
-    @Slot(str, str, str, str)
-    def log(self, call, band, mode, exch):
+    @Slot(str, str, str, str, str)
+    def log(self, call, band, mode, exch, meta):
+        self.meta.update(json.loads(meta))
+
         call = call.upper()
-        if not self.logger.log(call, band, mode, exch, json.dumps(meta)):
+        if not self.logger.log(call, band, mode, exch, json.dumps(self.meta)):
             self.setStatus.emit("duplicate")
 
     @Slot(str, str, str)
@@ -68,7 +70,6 @@ if __name__ == "__main__":
     logname = sys.argv.pop(0)
 
     operator = sys.argv.pop(0).upper()
-    meta = {"operator" : operator}
 
     app = QGuiApplication(sys.argv)
     engine = QQmlApplicationEngine()
@@ -80,7 +81,7 @@ if __name__ == "__main__":
     root = engine.rootObjects()[0]
     context = engine.rootContext()
 
-    logger = LoggerWrapper(logger.Logger(logname), meta)
+    logger = LoggerWrapper(logger.Logger(logname))
     context.setContextProperty("logger", logger)
     logger.setStatus.connect(root.setStatus)
     logger.clearStatus.connect(root.clearStatus)

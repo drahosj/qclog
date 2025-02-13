@@ -17,6 +17,7 @@ Window {
     property alias modeOut: modeOut
     property alias bandOut: bandOut
     property alias frequencyOut: frequencyOut
+    property alias operatorOut: operatorOut
 
     signal submit
     signal clear
@@ -28,7 +29,7 @@ Window {
     }
 
     function setup(operator) {
-        mycallOut.text = operator;
+        operatorOut.text = operator;
         callIn.focus = true;
         rig.refreshRigData();
     }
@@ -64,14 +65,14 @@ Window {
 
         TextField {
             id: editOperatorField
-            text: mycallOut.text
+            text: operatorOut.text
             Keys.onReturnPressed: editOperatorDialog.accept()
         }
 
         standardButtons: Dialog.Ok
 
         onAccepted: {
-            mycallOut.text = editOperatorField.text
+            operatorOut.text = editOperatorField.text
         }
 
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
@@ -106,8 +107,8 @@ Window {
         OutputField {
             backgroundColor: 'darkgrey'
             Layout.rightMargin: 20
-            id: mycallOut
-            text: 'MYCALL'
+            id: operatorOut
+            text: 'operator'
 
             onRightClicked: editOperatorDialog.open()
         }
