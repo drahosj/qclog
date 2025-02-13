@@ -123,9 +123,14 @@ Window {
             }
         }
 
+        Rectangle {
+            Layout.minimumWidth: 10
+        }
+
         RowLayout {
             spacing: 0
             id: logFields
+            Layout.fillWidth: true
         }
 
         Rectangle {
