@@ -91,12 +91,16 @@ Window {
             backgroundColor: 'green'
             id: modeOut
             title: 'Mode'
+	    Layout.minimumWidth: 100
+	    Layout.maximumWidth: 100
         }
 
         OutputField {
             backgroundColor: 'plum'
             id: bandOut
             title: 'Band'
+	    Layout.minimumWidth: 80
+	    Layout.maximumWidth: 80
         }
 
         OutputField {
@@ -110,6 +114,8 @@ Window {
             Layout.rightMargin: 20
             id: operatorOut
             title: 'Operator'
+	    Layout.minimumWidth: 140
+	    Layout.maximumWidth: 140
         }
 
         LogField {
