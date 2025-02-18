@@ -3,10 +3,12 @@
 # This Python file uses the following encoding: utf-8
 import sys
 import json
+import argparse
+import os
 
 from pathlib import Path
 
-from PySide6.QtCore import Signal, QObject, Slot
+from PySide6.QtCore import Signal, QObject, Slot, QThread, Property
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, QmlElement
 
@@ -18,17 +20,24 @@ class LoggerWrapper(QObject):
     setStatus = Signal(str)
     clearStatus = Signal(str)
     populateEntry = Signal(str, str)
+    logResponse = Signal(str)
+    last_qso = None
 
-    def __init__(self, logger, meta=None, parent=None):
+    def __init__(self, logger, meta={}, parent=None):
         super().__init__(parent)
         self.logger = logger
         self.meta = meta
 
-    @Slot(str, str, str, str)
-    def log(self, call, band, mode, exch):
+    @Slot(str, str, str, str, str, bool)
+    def log(self, call, band, mode, exch, meta, force):
+        self.meta.update(json.loads(meta))
+
         call = call.upper()
-        if not self.logger.log(call, band, mode, exch, json.dumps(meta)):
-            self.setStatus.emit("duplicate")
+        qso_id = self.logger.log(call, band, mode, exch, json.dumps(self.meta),
+                               force)
+        self.logResponse.emit(qso_id)
+        if qso_id is not None:
+            last_qso = qso_id
 
     @Slot(str, str, str)
     def checkDupe(self, call, band, mode):
@@ -46,41 +55,83 @@ class LoggerWrapper(QObject):
         print(f"Last undone #{call} (#{exch})")
         self.populateEntry.emit(call, exch)
         
+    def getLastQso(self):
+        return self.last_qso
+
+    def setLastQso(self, uuid):
+        self.last_qso = uuid
+
+    lastQso = Property(str, getLastQso, setLastQso)
+
 
 class RigWrapper(QObject):
     updatedRigData = Signal(str, str, str)
     setStatus = Signal(str)
     clearStatus = Signal(str)
+    triggerWorker = Signal()
+
+    def __init__(self, rig, parent=None):
+        super().__init__(parent)
+        self.worker = RigWorker(rig)
+        self.workerThread = QThread()
+        self.worker.moveToThread(self.workerThread)
+        self.worker.rigError.connect(self.setRigError)
+        self.worker.updatedRigData.connect(self.dataFromWorker)
+        self.triggerWorker.connect(self.worker.workerUpdate)
+        self.workerThread.start()
+
+    @Slot(str, str, str)
+    def dataFromWorker(self, band, mode, freq):
+        self.updatedRigData.emit(band, mode, freq)
+        self.clearStatus.emit('rigerror')
+
+    @Slot()
+    def setRigError(self):
+        self.setStatus.emit('rigerror')
+
+    @Slot()
+    def refreshRigData(self):
+        self.triggerWorker.emit()
+
+class RigWorker(QObject):
+    updatedRigData = Signal(str, str, str)
+    rigError = Signal()
 
     def __init__(self, rig, parent=None):
         super().__init__(parent)
         self.rig = rig
 
     @Slot()
-    def refreshRigData(self):
+    def workerUpdate(self):
         try:
             band = self.rig.get_band()
             mode = self.rig.get_mode()
             freq = str(self.rig.get_freq())
             self.updatedRigData.emit(band, mode, freq)
-            self.clearStatus.emit("rigerror")
         except flrig.RigCommError as e:
-            self.setStatus.emit("rigerror")
+            self.rigError.emit()
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("./main.py <logname> <operator>")
-        exit(-1)
+    default_datadir = Path(os.path.expanduser('~')) / '.qclog'
 
-    sys.argv.pop(0)
-    logname = sys.argv.pop(0)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('log', help='Name of database and log files',
+                        default='qclog-defaultlog')
+    parser.add_argument('-i', '--interface', default='fd')
+    parser.add_argument('-o', '--operator')
+    parser.add_argument('-b', '--band')
+    parser.add_argument('-m', '--mode')
+    parser.add_argument('-f', '--frequency')
+    parser.add_argument('--flrig', help='Enable flrig', action='store_true')
+    parser.add_argument('-d', '--data-dir', help='Directory for logs and db',
+                        default=default_datadir)
 
-    operator = sys.argv.pop(0).upper()
-    meta = {"operator" : operator}
+    args = parser.parse_args(sys.argv[1:])
 
     app = QGuiApplication(sys.argv)
     engine = QQmlApplicationEngine()
-    qml_file = Path(__file__).resolve().parent / "main.qml"
+    iface_dir =  Path(__file__).resolve().parent / "Interfaces"
+    qml_file = iface_dir / f"{args.interface}.qml"
     engine.load(qml_file)
     if not engine.rootObjects():
         sys.exit(-1)
@@ -88,17 +139,25 @@ if __name__ == "__main__":
     root = engine.rootObjects()[0]
     context = engine.rootContext()
 
-    logger = LoggerWrapper(logger.Logger(logname), meta)
+    print(f"Storing logs in {args.data_dir}.")
+    if not os.path.exists(args.data_dir):
+        print(f"{args.data_dir} doesn't exist, creating.")
+        os.makedirs(args.data_dir)
+
+    logger = LoggerWrapper(logger.Logger(args.log, Path(args.data_dir)))
     context.setContextProperty("logger", logger)
     logger.setStatus.connect(root.setStatus)
     logger.clearStatus.connect(root.clearStatus)
+    logger.logResponse.connect(root.logged)
 
-    #rig = RigWrapper(rig.Rig(model, port))
-    rig = RigWrapper(flrig.Rig())
-    context.setContextProperty("rig", rig)
-    rig.updatedRigData.connect(root.populateRigData)
-    rig.setStatus.connect(root.setStatus)
-    rig.clearStatus.connect(root.clearStatus)
+    if args.flrig:
+        rig = RigWrapper(flrig.Rig())
+        context.setContextProperty("rig", rig)
+        rig.updatedRigData.connect(root.populateRigData)
+        rig.setStatus.connect(root.setStatus)
+        rig.clearStatus.connect(root.clearStatus)
+    else:
+        root.populateRigData(args.band, args.mode, args.frequency)
 
-    root.setup(operator)
+    root.setup(args.operator)
     sys.exit(app.exec())
