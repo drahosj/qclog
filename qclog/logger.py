@@ -76,6 +76,11 @@ class Logger:
         cur.execute("""
             CREATE VIEW log AS
             SELECT * FROM local_log;""")
+        cur.execute("""
+            CREATE TABLE persistent_settings (
+                key TEXT NOT NULL UNIQUE,
+                value TEXT
+            );""")
         cur.close()
 
     def log(self, callsign, band, mode, exchange, meta=None, force=False):
@@ -113,6 +118,28 @@ class Logger:
         print("Timestamp\tBand\tMode\tCallsign\tExch")
         for row in cur.execute("SELECT * FROM log;"):
             print(f"{row[1]}\t{row[3]}\t{row[4]}\t{row[2]}\t{row[5]}")
+
+    def set_setting(self, key, value):
+        print(f"Saving persistent setting {key}={value}")
+        cur = self.conn.cursor()
+        cur.execute("""
+            INSERT INTO 
+                persistent_settings (key, value)
+            VALUES 
+                (?, ?)
+            ON CONFLICT(key) DO
+            UPDATE SET value=?;""", [key, value, value])
+        self.conn.commit()
+        cur.close()
+
+    def get_setting(self, key):
+        cur = self.conn.cursor()
+        for row in cur.execute("""
+            SELECT value FROM persistent_settings
+            WHERE key=?;""", [key]):
+            return row[0]
+        return None
+
 
     def undo_last(self):
         cur = self.conn.cursor()

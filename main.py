@@ -5,16 +5,18 @@ import sys
 import json
 import argparse
 import os
+import uuid
 
 from pathlib import Path
 
-from PySide6.QtCore import Signal, QObject, Slot, QThread, Property
+from PySide6.QtCore import Signal, QObject, Slot, QThread, Property, QTimer
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, QmlElement
 
-import logger
-#import rig
-import flrig
+import qclog.logger
+#import qclog.rig
+import qclog.flrig
+import qclog.net
 
 class LoggerWrapper(QObject):
     setStatus = Signal(str)
@@ -100,6 +102,9 @@ class RigWorker(QObject):
     def __init__(self, rig, parent=None):
         super().__init__(parent)
         self.rig = rig
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.workerUpdate)
+        self.timer.start(2000)
 
     @Slot()
     def workerUpdate(self):
@@ -158,6 +163,18 @@ if __name__ == "__main__":
         rig.clearStatus.connect(root.clearStatus)
     else:
         root.populateRigData(args.band, args.mode, args.frequency)
+
+    station_id = logger.logger.get_setting("station_id")
+    if station_id is None:
+        print("No station id found, generating...")
+        station_id = str(uuid.uuid4())
+        logger.logger.set_setting("station_id", station_id)
+
+    print(f"Station ID: {station_id}")
+
+    net_func = qclog.net.NetFunctions(station_id)
+    net_func.start_listener()
+    net_func.enable_heartbeat()
 
     root.setup(args.operator)
     sys.exit(app.exec())
