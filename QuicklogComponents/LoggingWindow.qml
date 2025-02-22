@@ -38,6 +38,10 @@ Window {
         callIn.focus = true;
     }
 
+    function setCall(call) {
+        callIn.text = call;
+    }
+
     function setStatus(text) {
         Helpers.addStatusMessage(text);
         root.updateStatus();
