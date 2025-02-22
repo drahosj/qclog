@@ -188,14 +188,14 @@ if __name__ == "__main__":
         print(f"{args.data_dir} doesn't exist, creating.")
         os.makedirs(args.data_dir)
 
-    logger = LoggerWrapper(logger.Logger(args.log, Path(args.data_dir)))
+    logger = LoggerWrapper(qclog.logger.Logger(args.log, Path(args.data_dir)))
     context.setContextProperty("logger", logger)
     logger.setStatus.connect(root.setStatus)
     logger.clearStatus.connect(root.clearStatus)
     logger.logResponse.connect(root.logged)
 
     if args.flrig:
-        rig = RigWrapper(flrig.Rig())
+        rig = RigWrapper(qclog.flrig.Rig())
         context.setContextProperty("rig", rig)
         rig.updatedRigData.connect(root.populateRigData)
         rig.setStatus.connect(root.setStatus)
