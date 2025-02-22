@@ -80,14 +80,6 @@ Window {
         root.clear();
     }
 
-
-    Timer {
-        interval: 2000
-        running: true 
-        repeat: true
-        onTriggered: rig.refreshRigData()
-    }
-
     RowLayout {
         spacing: 0
 

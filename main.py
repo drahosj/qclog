@@ -5,6 +5,7 @@ import sys
 import json
 import argparse
 import os
+import uuid
 
 from pathlib import Path
 
@@ -12,14 +13,15 @@ from PySide6.QtCore import Signal, QObject, Slot, QThread, Property, QTimer
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, QmlElement
 
-import logger
-#import rig
-import flrig
-import fldigi
+import qclog.fldigi
+import qclog.logger
+import qclog.flrig
+import qclog.net
 
 class LoggerWrapper(QObject):
     setStatus = Signal(str)
     clearStatus = Signal(str)
+    populateEntry = Signal(str, str)
     logResponse = Signal(str)
     last_qso = None
 
@@ -49,6 +51,12 @@ class LoggerWrapper(QObject):
         else:
             self.clearStatus.emit("duplicate")
 
+    @Slot()
+    def undoLast(self):
+        call, exch = self.logger.undo_last()
+        print(f"Last undone #{call} (#{exch})")
+        self.populateEntry.emit(call, exch)
+        
     def getLastQso(self):
         return self.last_qso
 
@@ -56,7 +64,6 @@ class LoggerWrapper(QObject):
         self.last_qso = uuid
 
     lastQso = Property(str, getLastQso, setLastQso)
-
 
 
 class RigWrapper(QObject):
@@ -95,6 +102,9 @@ class RigWorker(QObject):
     def __init__(self, rig, parent=None):
         super().__init__(parent)
         self.rig = rig
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.workerUpdate)
+        self.timer.start(2000)
 
     @Slot()
     def workerUpdate(self):
@@ -194,8 +204,20 @@ if __name__ == "__main__":
         root.populateRigData(args.band, args.mode, args.frequency)
 
     if args.fldigi:
-        fldigi = FldigiWrapper(fldigi.Fldigi())
+        fldigi = FldigiWrapper(qclog.fldigi.Fldigi())
         fldigi.logCallChanged.connect(root.setCall)
+
+    station_id = logger.logger.get_setting("station_id")
+    if station_id is None:
+        print("No station id found, generating...")
+        station_id = str(uuid.uuid4())
+        logger.logger.set_setting("station_id", station_id)
+
+    print(f"Station ID: {station_id}")
+
+    net_func = qclog.net.NetFunctions(station_id)
+    net_func.start_listener()
+    net_func.enable_heartbeat()
 
     root.setup(args.operator)
     sys.exit(app.exec())
