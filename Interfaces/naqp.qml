@@ -6,20 +6,20 @@ LoggingWindow {
     title: qsTr("NAQP Logging")
 
     LogField {
-        id: stateIn
-        placeholderText: 'STATE'
-        backgroundColor: 'teal'
-    }
-
-    LogField {
         id: nameIn
         placeholderText: 'NAME'
         backgroundColor: 'plum'
     }
 
+    LogField {
+        id: stateIn
+        placeholderText: 'STATE'
+        backgroundColor: 'teal'
+    }
+
     function submit(exch) {
+        exch['name'] = nameIn.text;
         exch['state'] = stateIn.text;
-        exch['name'] = stateIn.text;
         if (exch['state'] == "" || exch['name'] == "") {
             root.setStatus("incomplete");
             return false;
@@ -28,7 +28,7 @@ LoggingWindow {
     }
 
     function clear() {
-        stateIn.text = '';
         nameIn.text = '';
+        stateIn.text = '';
     }
 }
