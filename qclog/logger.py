@@ -7,14 +7,16 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+
 class Logger:
     default_datadir = Path(os.path.expanduser('~')) / '.qclog'
+
     def __init__(self, logname, datadir=default_datadir):
         self.conn = sqlite3.connect(datadir / f"{logname}.db")
         cur = self.conn.cursor()
         cur.execute("""
-            SELECT name 
-            FROM sqlite_master 
+            SELECT name
+            FROM sqlite_master
             WHERE type='table' AND name='qsos';""")
         if cur.fetchone() is None:
             self.create_schema()
@@ -118,12 +120,12 @@ class Logger:
                 json.dumps(qso["meta"])]
         cur.execute("""
             INSERT INTO remote_qsos 
-                (id, timestamp, callsign, band, mode, exchange, meta) 
+                (id, timestamp, callsign, band, mode, exchange, meta)
             VALUES (?, ?, ?, ?, ?, ?, ?);""", data)
         print("remote QSO logged")
         self.conn.commit()
 
-    def get_json_qso(self, qso_id):
+    def get_qso(self, qso_id):
         cur = self.conn.cursor()
         cur.execute("""
             SELECT
@@ -134,15 +136,14 @@ class Logger:
                 id = ?;""", [qso_id])
         qso = cur.fetchone()
         cur.close()
-        return json.dumps({
-            "id" : qso[0],
-            "timestamp" : qso[1],
-            "callsign" : qso[2],
-            "band" : qso[3],
-            "mode" : qso[4],
-            "exchange" : json.loads(qso[5]),
-            "meta" : json.loads(qso[6])})
-
+        return {
+            "id": qso[0],
+            "timestamp": qso[1],
+            "callsign": qso[2],
+            "band": qso[3],
+            "mode": qso[4],
+            "exchange": json.loads(qso[5]),
+            "meta": json.loads(qso[6])}
 
     def log(self, callsign, band, mode, exchange, meta=None, force=False):
         cur = self.conn.cursor()
@@ -159,7 +160,7 @@ class Logger:
         data = [str(qso_id), callsign, band, mode, exchange, meta]
         cur.execute("""
             INSERT INTO qsos 
-                (id, timestamp, callsign, band, mode, exchange, meta) 
+                (id, timestamp, callsign, band, mode, exchange, meta)
             VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?);""", data)
         self.conn.commit()
         return str(qso_id)
@@ -196,11 +197,10 @@ class Logger:
     def get_setting(self, key):
         cur = self.conn.cursor()
         for row in cur.execute("""
-            SELECT value FROM persistent_settings
-            WHERE key=?;""", [key]):
+                SELECT value FROM persistent_settings
+                WHERE key=?;""", [key]):
             return row[0]
         return None
-
 
     def undo_last(self):
         cur = self.conn.cursor()
@@ -216,7 +216,6 @@ class Logger:
                         [row[0], datetime.now().isoformat()])
             return row[1], row[2]
         return "", ""
-
 
     def cabrillo(self, exchfmt):
         cur = self.conn.cursor()
@@ -236,30 +235,30 @@ class Logger:
         return "\n".join(qsos)
 
 cabrillo_band_map = {
-        "160M" : "1800",
-        "80M" : "3500",
-        "40M" : "7000",
-        "20M" : "14000",
-        "15M" : "21000",
-        "10M" : "28000",
-        "6M" : "50",
-        "2M" : "144",
+        "160M": "1800",
+        "80M": "3500",
+        "40M": "7000",
+        "20M": "14000",
+        "15M": "21000",
+        "10M": "28000",
+        "6M": "50",
+        "2M": "144",
         }
 
 cabrillo_mode_map = {
-        "LSB" : "PH",
-        "USB" : "PH",
-        "SSB" : "PH",
-        "AM" : "PH",
-        "CW-U" : "CW",
-        "CW-L" : "CW",
-        "DIG-U" : "DG",
-        "DIG-L" : "DG",
-        "DATA-U" : "DG",
-        "DATA-L" : "DG",
-        "DATA" : "DG",
-        "FM" : "FM",
-        "RTTY" : "RY"
+        "LSB": "PH",
+        "USB": "PH",
+        "SSB": "PH",
+        "AM": "PH",
+        "CW-U": "CW",
+        "CW-L": "CW",
+        "DIG-U": "DG",
+        "DIG-L": "DG",
+        "DATA-U": "DG",
+        "DATA-L": "DG",
+        "DATA": "DG",
+        "FM": "FM",
+        "RTTY": "RY"
         }
 
 
@@ -286,7 +285,6 @@ def format_exchange(fmt, call, exch, meta):
 
 if __name__ == "__main__":
     from sys import argv
-    from os import path
     if argv[1] == "-l":
         name = argv[2]
         logger = Logger(name)

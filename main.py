@@ -83,6 +83,7 @@ if __name__ == "__main__":
     logger.setStatus.connect(root.setStatus)
     logger.clearStatus.connect(root.clearStatus)
     logger.logResponse.connect(root.logged)
+    logger.qsoLogged.connect(root.localLogged)
 
     if args.flrig:
         rig = RigWrapper(qclog.flrig.Rig())
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     if args.station_name is not None:
         logger.logger.set_setting("station_name", args.station_name)
         
-    logger.meta.update({"station_id" : gv.station_id})
+    logger.meta.update({"station_id": gv.station_id})
         
     gv.station_name = logger.logger.get_setting("station_name")
     if gv.station_name is None:
@@ -122,6 +123,8 @@ if __name__ == "__main__":
     net_func.send_heartbeat()
     logger.qsoLogged.connect(net_func.send_qso)
     net_func.remoteQsoReceived.connect(logger.log_remote)
+    net_func.remoteQsoReceived.connect(root.remoteLogged)
+    context.setContextProperty('net', net_func)
     
 
     root.setup(args.operator)

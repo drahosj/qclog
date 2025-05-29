@@ -3,7 +3,7 @@ import "../QuicklogComponents"
 
 LoggingWindow {
     id: root
-    title: qsTr("Field Day Logging")
+    baseTitle: qsTr("Field Day Logging")
 
     LogField {
         id: classIn

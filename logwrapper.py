@@ -1,15 +1,14 @@
 import json
 
-from PySide6.QtCore import Signal, QObject, Slot, QThread, Property, QTimer
-from PySide6.QtGui import QGuiApplication
-from PySide6.QtQml import QQmlApplicationEngine, QmlElement
+from PySide6.QtCore import Signal, QObject, Slot, Property
+
 
 class LoggerWrapper(QObject):
     setStatus = Signal(str)
     clearStatus = Signal(str)
     populateEntry = Signal(str, str)
     logResponse = Signal(str)
-    qsoLogged = Signal(str)
+    qsoLogged = Signal(dict)
     last_qso = None
 
     def __init__(self, logger, meta={}, parent=None):
@@ -22,16 +21,16 @@ class LoggerWrapper(QObject):
         self.meta.update(json.loads(meta))
 
         call = call.upper()
-        qso_id = self.logger.log(call, band, mode, exch, json.dumps(self.meta),
-                               force)
+        qso_id = self.logger.log(call, band, mode, exch,
+                                 json.dumps(self.meta), force)
         self.logResponse.emit(qso_id)
         if qso_id is not None:
-            last_qso = qso_id
-            self.qsoLogged.emit(self.logger.get_json_qso(qso_id))
+            self.last_qso = self.logger.get_qso(qso_id)
+            self.qsoLogged.emit(self.last_qso)
 
-    @Slot(str)
-    def log_remote(self, json_qso):
-        self.logger.add_remote_qso(json.loads(json_qso))
+    @Slot(dict)
+    def log_remote(self, qso):
+        self.logger.add_remote_qso(qso)
 
     @Slot(str, str, str)
     def checkDupe(self, call, band, mode):
@@ -48,11 +47,11 @@ class LoggerWrapper(QObject):
         call, exch = self.logger.undo_last()
         print(f"Last undone #{call} (#{exch})")
         self.populateEntry.emit(call, exch)
-        
+
     def getLastQso(self):
         return self.last_qso
 
     def setLastQso(self, uuid):
         self.last_qso = uuid
 
-    lastQso = Property(str, getLastQso, setLastQso)
+    lastQso = Property(dict, getLastQso, setLastQso)

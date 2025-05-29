@@ -1,14 +1,13 @@
 import json
 
 
-from PySide6.QtCore import Signal, QObject, Slot, QTimer
+from PySide6.QtCore import Signal, QObject, QTimer, Property
 from PySide6.QtNetwork import QUdpSocket, QHostAddress, QNetworkDatagram
 from PySide6.QtNetwork import QAbstractSocket
 
 
-
 class NetFunctions(QObject):
-    remoteQsoReceived = Signal(str)
+    remoteQsoReceived = Signal(dict)
 
     def __init__(self, gv, parent=None):
         super().__init__(parent)
@@ -17,8 +16,17 @@ class NetFunctions(QObject):
 
         self.socket = QUdpSocket(self)
         self.socket.bind(QHostAddress.Any, 14300,
-                         QAbstractSocket.ShareAddress | 
+                         QAbstractSocket.ShareAddress |
                          QAbstractSocket.ReuseAddressHint)
+        self.last_qso = None
+
+    def getLastQso(self):
+        return self.last_qso
+
+    def setLastQso(self, uuid):
+        self.last_qso = uuid
+
+    lastQso = Property(dict, getLastQso, setLastQso)
 
     def start_listener(self):
         self.socket.readyRead.connect(self.read_datagram)
@@ -36,7 +44,8 @@ class NetFunctions(QObject):
             if mtype == "qso":
                 print(f"\tReceived remote qso from {sender}")
                 qso = message["payload"]
-                self.remoteQsoReceived.emit(json.dumps(qso))
+                self.remoteQsoReceived.emit(qso)
+                self.setLastQso(qso)
             elif mtype == "heartbeat":
                 hb_id = message["payload"]["station_id"]
                 hb_name = message["payload"]["station_name"]
@@ -44,12 +53,11 @@ class NetFunctions(QObject):
             else:
                 print(f"\tUnknown message type `{mtype}`")
 
-
     def send_qso(self, qso):
         message = {
-                "type" : "qso",
-                "sender" : self.station_id,
-                "payload" : json.loads(qso)
+                "type": "qso",
+                "sender": self.station_id,
+                "payload": qso
                 }
         datagram = QNetworkDatagram()
         datagram.setData(json.dumps(message).encode())
@@ -64,11 +72,11 @@ class NetFunctions(QObject):
 
     def send_heartbeat(self):
         heartbeat = {
-                "type" : "heartbeat",
-                "sender" : self.station_id,
-                "payload" : {
-                    "station_id" : self.station_id,
-                    "station_name" : self.station_name
+                "type": "heartbeat",
+                "sender": self.station_id,
+                "payload": {
+                    "station_id": self.station_id,
+                    "station_name": self.station_name
                     }
                 }
         datagram = QNetworkDatagram()

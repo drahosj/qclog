@@ -9,7 +9,8 @@ Window {
     width: 1400
     height: 45
     visible: true
-    title: qsTr("Minimal Logger")
+    property string baseTitle: qsTr("Minimal Logger")
+    title: baseTitle
 
     default property alias fields: logFields.data
 
@@ -56,12 +57,36 @@ Window {
     function logged(uuid) {
         if (uuid) {
             console.log("UI got response of logged qso " + uuid);
-            root.clearFields();
+            root.clearFields()
         } else {
             console.log("Logger rejected qso.");
             root.setStatus('duplicate');
         }
     }
+
+    function localLogged(qso) {
+        console.log("UI got logged QSO: " + JSON.stringify(qso));
+        updateTitleStatus();
+    }
+
+    function remoteLogged(qso) {
+        console.log("UI got remote QSO: " + JSON.stringify(qso));
+        updateTitleStatus();
+    }
+
+    function updateTitleStatus() {
+        var local_qso = logger.lastQso
+        var remote_qso = net.lastQso
+        var t = baseTitle;
+        if (local_qso) {
+            t = `${t} - Logged ${local_qso["callsign"]}`
+        }
+        if (remote_qso) {
+            t = `${t} - ${remote_qso["callsign"]} logged by other station`
+        }
+        title = t
+    }
+
 
     function updateStatus() {
         var st = Helpers.getCurrentStatus()
@@ -164,8 +189,8 @@ Window {
                 root.clearStatus("duplicate");
                 root.clearStatus("incomplete");
 
-                logger.log(callIn.text, 
-                bandOut.text, 
+                logger.log(callIn.text,
+                bandOut.text,
                 modeOut.text,
                 JSON.stringify(exch),
                 JSON.stringify(meta), force);
