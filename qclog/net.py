@@ -8,7 +8,7 @@ from PySide6.QtNetwork import QAbstractSocket
 
 
 class NetFunctions(QObject):
-    remoteQsoReceived = Signal(dict)
+    remoteQsoReceived = Signal(str)
 
     def __init__(self, gv, parent=None):
         super().__init__(parent)
@@ -26,13 +26,23 @@ class NetFunctions(QObject):
     def read_datagram(self):
         while self.socket.hasPendingDatagrams():
             datagram = self.socket.receiveDatagram()
-            print("Received datagram")
-            print(f"Sender: {datagram.senderAddress()}")
-            print(f"Data: {datagram.data()}")
+            print(f"Sender: {datagram.senderAddress().toString()}")
             message = json.loads(datagram.data().data().decode())
-            if message["type"] == "qso":
+            sender = message["sender"]
+            if sender == self.station_id:
+                print("\tSkipping own datagram")
+                continue
+            mtype = message["type"]
+            if mtype == "qso":
+                print(f"\tReceived remote qso from {sender}")
                 qso = message["payload"]
                 self.remoteQsoReceived.emit(json.dumps(qso))
+            elif mtype == "heartbeat":
+                hb_id = message["payload"]["station_id"]
+                hb_name = message["payload"]["station_name"]
+                print(f"\tHeartbeat: {hb_id} aka {hb_name}")
+            else:
+                print(f"\tUnknown message type `{mtype}`")
 
 
     def send_qso(self, qso):
@@ -43,6 +53,7 @@ class NetFunctions(QObject):
                 }
         datagram = QNetworkDatagram()
         datagram.setData(json.dumps(message).encode())
+        print(f"Sending qso broadcast for {message["payload"]["id"]}")
         datagram.setDestination(QHostAddress.Broadcast, 14300)
         self.socket.writeDatagram(datagram)
 

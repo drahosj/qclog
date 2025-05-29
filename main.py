@@ -110,17 +110,19 @@ if __name__ == "__main__":
     if args.station_name is not None:
         logger.logger.set_setting("station_name", args.station_name)
         
+    logger.meta.update({"station_id" : gv.station_id})
+        
     gv.station_name = logger.logger.get_setting("station_name")
     if gv.station_name is None:
         gv.station_name = gv.station_id
-                                  
 
     net_func = qclog.net.NetFunctions(gv)
     net_func.start_listener()
     net_func.enable_heartbeat()
     net_func.send_heartbeat()
     logger.qsoLogged.connect(net_func.send_qso)
-    logger.meta.update({"station_id" : gv.station_id})
+    net_func.remoteQsoReceived.connect(logger.log_remote)
+    
 
     root.setup(args.operator)
     sys.exit(app.exec())

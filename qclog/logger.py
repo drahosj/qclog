@@ -85,9 +85,17 @@ class Logger:
                 );""")
         cur.execute("""
             CREATE VIEW log AS
-                SELECT * FROM local_log
+                SELECT 
+                    id, timestamp, 
+                    band, mode, callsign, 
+                    exchange, meta 
+                FROM local_log
             UNION
-                SELECT * FROM remote_qsos
+                SELECT
+                    id, timestamp, 
+                    band, mode, callsign, 
+                    exchange, meta 
+                FROM remote_qsos
             ;""")
         cur.execute("""
             CREATE TABLE persistent_settings (
@@ -104,12 +112,13 @@ class Logger:
                 qso["callsign"],
                 qso["band"],
                 qso["mode"],
-                qso["exchange"],
-                qso["meta"]]
+                json.dumps(qso["exchange"]),
+                json.dumps(qso["meta"])]
         cur.execute("""
             INSERT INTO remote_qsos 
                 (id, timestamp, callsign, band, mode, exchange, meta) 
             VALUES (?, ?, ?, ?, ?, ?, ?);""", data)
+        print("remote QSO logged")
         self.conn.commit()
 
     def get_json_qso(self, qso_id):
