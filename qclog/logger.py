@@ -3,11 +3,13 @@
 import sqlite3
 import uuid
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 
 class Logger:
-    def __init__(self, logname, datadir=Path('.')):
+    default_datadir = Path(os.path.expanduser('~')) / '.qclog'
+    def __init__(self, logname, datadir=default_datadir):
         self.conn = sqlite3.connect(datadir / f"{logname}.db")
         cur = self.conn.cursor()
         cur.execute("""
@@ -284,6 +286,7 @@ def format_exchange(fmt, call, exch, meta):
 
 if __name__ == "__main__":
     from sys import argv
+    from os import path
     if argv[1] == "-l":
         name = argv[2]
         logger = Logger(name)
@@ -303,12 +306,3 @@ if __name__ == "__main__":
         logger = Logger(name)
         print(logger.get_json_qso(qso_id))
         exit()
-
-    name = argv[1]
-    logger = Logger(name)
-
-    callsign = argv[2]
-    band = argv[3]
-    mode = argv[4]
-    exch = argv[5]
-    logger.log(callsign, band, mode, exch)
