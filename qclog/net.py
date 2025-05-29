@@ -56,7 +56,8 @@ class NetFunctions(QObject):
                 "type" : "heartbeat",
                 "sender" : self.station_id,
                 "payload" : {
-                    "station_id" : self.station_id
+                    "station_id" : self.station_id,
+                    "station_name" : self.station_name
                     }
                 }
         datagram = QNetworkDatagram()
