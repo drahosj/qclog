@@ -7,6 +7,7 @@ LoggingWindow {
 
     LogField {
         id: nameIn
+        Layout.minimumWidth: 140
         placeholderText: 'NAME'
         backgroundColor: 'plum'
     }

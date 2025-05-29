@@ -40,6 +40,7 @@ Window {
 
     function setCall(call) {
         callIn.text = call;
+        logger.checkDupe(callIn.text, bandOut.text, modeOut.text);
     }
 
     function setStatus(text) {

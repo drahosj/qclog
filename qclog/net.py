@@ -8,13 +8,15 @@ from PySide6.QtNetwork import QAbstractSocket
 
 
 class NetFunctions(QObject):
+    remoteQsoReceived = Signal(dict)
 
-    def __init__(self, station_id, parent=None):
+    def __init__(self, gv, parent=None):
         super().__init__(parent)
-        self.station_id = station_id
+        self.station_id = gv.station_id
+        self.station_name = gv.station_name
 
         self.socket = QUdpSocket(self)
-        self.socket.bind(QHostAddress.LocalHost, 14300,
+        self.socket.bind(QHostAddress.Any, 14300,
                          QAbstractSocket.ShareAddress | 
                          QAbstractSocket.ReuseAddressHint)
 
@@ -27,6 +29,22 @@ class NetFunctions(QObject):
             print("Received datagram")
             print(f"Sender: {datagram.senderAddress()}")
             print(f"Data: {datagram.data()}")
+            message = json.loads(datagram.data().data().decode())
+            if message["type"] == "qso":
+                qso = message["payload"]
+                self.remoteQsoReceived.emit(json.dumps(qso))
+
+
+    def send_qso(self, qso):
+        message = {
+                "type" : "qso",
+                "sender" : self.station_id,
+                "payload" : json.loads(qso)
+                }
+        datagram = QNetworkDatagram()
+        datagram.setData(json.dumps(message).encode())
+        datagram.setDestination(QHostAddress.Broadcast, 14300)
+        self.socket.writeDatagram(datagram)
 
     def enable_heartbeat(self):
         self.timer = QTimer(self)
@@ -43,6 +61,6 @@ class NetFunctions(QObject):
                 }
         datagram = QNetworkDatagram()
         datagram.setData(json.dumps(heartbeat).encode())
-        datagram.setDestination(QHostAddress.LocalHost, 14300)
+        datagram.setDestination(QHostAddress.Broadcast, 14300)
         self.socket.writeDatagram(datagram)
 

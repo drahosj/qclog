@@ -28,7 +28,7 @@ class Logger:
         cur = self.conn.cursor()
         cur.execute("""
             CREATE TABLE qsos (
-                id TEXT,
+                id TEXT UNIQUE,
                 timestamp DATETIME,
                 band TEXT,
                 mode TEXT,
@@ -60,7 +60,7 @@ class Logger:
                 COALESCE(mod.callsign, qsos.callsign) callsign,
                 COALESCE(mod.band, qsos.band) band,
                 COALESCE(mod.mode, qsos.mode) mode,
-                COALESCE(mod.exchange, qsos.exchange),
+                COALESCE(mod.exchange, qsos.exchange) exchange,
                 meta
             FROM qsos
             LEFT JOIN (
@@ -74,14 +74,64 @@ class Logger:
             ON deletions.qso_id = id
             WHERE deletions.qso_id IS NULL;""");
         cur.execute("""
+            CREATE TABLE remote_qsos (
+                id TEXT UNIQUE,
+                timestamp DATETIME,
+                band TEXT,
+                mode TEXT,
+                callsign TEXT,
+                exchange JSON,
+                meta JSON
+                );""")
+        cur.execute("""
             CREATE VIEW log AS
-            SELECT * FROM local_log;""")
+                SELECT * FROM local_log
+            UNION
+                SELECT * FROM remote_qsos
+            ;""")
         cur.execute("""
             CREATE TABLE persistent_settings (
                 key TEXT NOT NULL UNIQUE,
                 value TEXT
             );""")
         cur.close()
+
+    def add_remote_qso(self, qso):
+        cur = self.conn.cursor()
+        data = [
+                qso["id"],
+                qso["timestamp"],
+                qso["callsign"],
+                qso["band"],
+                qso["mode"],
+                qso["exchange"],
+                qso["meta"]]
+        cur.execute("""
+            INSERT INTO remote_qsos 
+                (id, timestamp, callsign, band, mode, exchange, meta) 
+            VALUES (?, ?, ?, ?, ?, ?, ?);""", data)
+        self.conn.commit()
+
+    def get_json_qso(self, qso_id):
+        cur = self.conn.cursor()
+        cur.execute("""
+            SELECT
+                id, timestamp, callsign, band, mode, exchange, meta
+            FROM
+                log
+            WHERE
+                id = ?;""", [qso_id])
+        qso = cur.fetchone()
+        cur.close()
+        return json.dumps({
+            "id" : qso[0],
+            "timestamp" : qso[1],
+            "callsign" : qso[2],
+            "band" : qso[3],
+            "mode" : qso[4],
+            "exchange" : json.loads(qso[5]),
+            "meta" : json.loads(qso[6])})
+
 
     def log(self, callsign, band, mode, exchange, meta=None, force=False):
         cur = self.conn.cursor()
@@ -236,6 +286,13 @@ if __name__ == "__main__":
         name = argv[3]
         logger = Logger(name)
         print(logger.cabrillo(fmt))
+        exit()
+
+    if argv[1] == "-g":
+        name = argv[2]
+        qso_id = argv[3]
+        logger = Logger(name)
+        print(logger.get_json_qso(qso_id))
         exit()
 
     name = argv[1]
