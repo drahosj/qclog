@@ -9,12 +9,12 @@ class LoggerWrapper(QObject):
     populateEntry = Signal(str, str)
     logResponse = Signal(str)
     qsoLogged = Signal(dict)
-    last_qso = None
 
     def __init__(self, logger, meta={}, parent=None):
         super().__init__(parent)
         self.logger = logger
         self.meta = meta
+        self.last_qso = {}
 
     @Slot(str, str, str, str, str, bool)
     def log(self, call, band, mode, exch, meta, force):

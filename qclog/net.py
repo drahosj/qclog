@@ -19,10 +19,11 @@ class NetFunctions(QObject):
         self.socket.bind(QHostAddress.Any, 14300,
                          QAbstractSocket.ShareAddress |
                          QAbstractSocket.ReuseAddressHint)
-        self.last_qso = None
+        self.last_qso = {}
         self.heard_stations = {}
 
     def getLastQso(self):
+        print(f"net.getLastQso: {self.last_qso}")
         return self.last_qso
 
     def getHeardStations(self):
@@ -47,8 +48,8 @@ class NetFunctions(QObject):
             if mtype == "qso":
                 print(f"\tReceived remote qso from {sender}")
                 qso = message["payload"]
-                self.remoteQsoReceived.emit(qso)
                 self.last_qso = qso
+                self.remoteQsoReceived.emit(qso)
             elif mtype == "heartbeat":
                 hb_id = message["payload"]["station_id"]
                 hb_name = message["payload"]["station_name"]
