@@ -136,6 +136,9 @@ class Logger:
                 id = ?;""", [qso_id])
         qso = cur.fetchone()
         cur.close()
+        if qso is None:
+            return None
+
         return {
             "id": qso[0],
             "timestamp": qso[1],
@@ -180,6 +183,13 @@ class Logger:
         print("Timestamp\tBand\tMode\tCallsign\tExch")
         for row in cur.execute("SELECT * FROM log;"):
             print(f"{row[1]}\t{row[3]}\t{row[4]}\t{row[2]}\t{row[5]}")
+
+    def get_qso_list(self):
+        cur = self.conn.cursor()
+        res = []
+        for row in cur.execute("SELECT id FROM local_log;"):
+            res.append(row[0])
+        return res
 
     def set_setting(self, key, value):
         print(f"Saving persistent setting {key}={value}")

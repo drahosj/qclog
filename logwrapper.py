@@ -48,6 +48,9 @@ class LoggerWrapper(QObject):
     def getRemoteCount(self, uuid):
         return self.logger.remote_count(uuid)
 
+    def getQsoList(self):
+        return self.logger.get_qso_list()
+
 
     @Slot()
     def undoLast(self):
