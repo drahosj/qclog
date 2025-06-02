@@ -25,8 +25,10 @@ from logwrapper import LoggerWrapper
 class GlobalValues(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.logger = None
         self.station_id = ""
         self.station_name = ""
+        self.local_qso_count = 0
         
     def getStationId(self):
         return self.station_id
@@ -39,7 +41,10 @@ class GlobalValues(QObject):
         
     def setStationName(self, station_name):
         self.station_name = station_name
-        
+
+    def getLocalQsoCount(self):
+        return self.logger.logger.local_count()
+
     stationId = Property(str, getStationId, setStationId)
     stationName = Property(str, getStationName, setStationName)
 
@@ -112,6 +117,7 @@ if __name__ == "__main__":
         logger.logger.set_setting("station_name", args.station_name)
         
     logger.meta.update({"station_id": gv.station_id})
+    gv.logger = logger
         
     gv.station_name = logger.logger.get_setting("station_name")
     if gv.station_name is None:

@@ -1,7 +1,7 @@
 import json
 
 
-from PySide6.QtCore import Signal, QObject, QTimer, Property
+from PySide6.QtCore import Signal, QObject, QTimer, Property, Slot
 from PySide6.QtNetwork import QUdpSocket, QHostAddress, QNetworkDatagram
 from PySide6.QtNetwork import QAbstractSocket
 
@@ -13,20 +13,23 @@ class NetFunctions(QObject):
         super().__init__(parent)
         self.station_id = gv.station_id
         self.station_name = gv.station_name
+        self.logger = gv.logger
 
         self.socket = QUdpSocket(self)
         self.socket.bind(QHostAddress.Any, 14300,
                          QAbstractSocket.ShareAddress |
                          QAbstractSocket.ReuseAddressHint)
         self.last_qso = None
+        self.heard_stations = {}
 
     def getLastQso(self):
         return self.last_qso
 
-    def setLastQso(self, uuid):
-        self.last_qso = uuid
+    def getHeardStations(self):
+        return self.heard_stations
 
-    lastQso = Property(dict, getLastQso, setLastQso)
+    lastQso = Property(dict, getLastQso)
+    heardStations = Property(dict, getHeardStations)
 
     def start_listener(self):
         self.socket.readyRead.connect(self.read_datagram)
@@ -45,13 +48,24 @@ class NetFunctions(QObject):
                 print(f"\tReceived remote qso from {sender}")
                 qso = message["payload"]
                 self.remoteQsoReceived.emit(qso)
-                self.setLastQso(qso)
+                self.last_qso = qso
             elif mtype == "heartbeat":
                 hb_id = message["payload"]["station_id"]
                 hb_name = message["payload"]["station_name"]
                 print(f"\tHeartbeat: {hb_id} aka {hb_name}")
+                self.handle_heartbeat(message["payload"])
             else:
                 print(f"\tUnknown message type `{mtype}`")
+
+    def handle_heartbeat(self, hb):
+        print(f"\t\t{hb}")
+        hb_id = hb["station_id"]
+        hb_name = hb["station_name"]
+        hb_nqsos = hb["local_qso_count"]
+        # TODO manage heard stations
+        logged_nqsos = self.logger.getRemoteCount(hb_id)
+        if hb_nqsos != logged_nqsos:
+            print(f"\t\tQSO count mismatch - {logged_nqsos}/{hb_nqsos}")
 
     def send_qso(self, qso):
         message = {
@@ -76,7 +90,8 @@ class NetFunctions(QObject):
                 "sender": self.station_id,
                 "payload": {
                     "station_id": self.station_id,
-                    "station_name": self.station_name
+                    "station_name": self.station_name,
+                    "local_qso_count": self.logger.getLocalCount()
                     }
                 }
         datagram = QNetworkDatagram()

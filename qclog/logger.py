@@ -217,6 +217,20 @@ class Logger:
             return row[1], row[2]
         return "", ""
 
+    def local_count(self):
+        cur = self.conn.cursor()
+        for row in cur.execute("SELECT count(*) FROM local_log;"):
+            return row[0]
+
+    def remote_count(self, station_id):
+        cur = self.conn.cursor()
+        for row in cur.execute("""
+            SELECT count(*)
+            FROM log
+            WHERE meta->>'station_id' = ?;""", [station_id]):
+            return row[0]
+        return 0
+
     def cabrillo(self, exchfmt):
         cur = self.conn.cursor()
         qsos = []

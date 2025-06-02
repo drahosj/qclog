@@ -42,6 +42,13 @@ class LoggerWrapper(QObject):
         else:
             self.clearStatus.emit("duplicate")
 
+    def getLocalCount(self):
+        return self.logger.local_count()
+
+    def getRemoteCount(self, uuid):
+        return self.logger.remote_count(uuid)
+
+
     @Slot()
     def undoLast(self):
         call, exch = self.logger.undo_last()
