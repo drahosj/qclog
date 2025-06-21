@@ -23,29 +23,41 @@ Fedora: `# dnf install python3-pyside6 python3-hamlib`
 
 `pip install -r requirements.txt`
 
+Remember to activate the venv before trying to run qclog.
+
 NOTE: Hamlib doesn't play nice with pip, hamlib probably won't work
 in a venv no matter what.
 
-
-
 ## Running
 From the QCLog directory
-
-`source venv/bin/activate` (if not already active)
 
 `./main.py <name-of-log-file>`
 
 The only mandatory argument is a name to use for the log files and DB.
 `./main.py --help` for more info.
 
+Provide a station name on first startup (station name is persisted in
+the DB for subsequent runs with the same log file) for better notifications
+when other stations log contacts.
+
 It's highly recommended to run with flrig enabled (--flrig) to automatically
 populate band/mode/frequency from the radio.
 
 ## General Usage
+NOTE: QCLog is really intended to run in a tiling window manager combined with
+whatever else you'd like. It's minimalist for a reason. With a floating
+window manager, just try to resize it to where you want and use
+your preferred key combination to bring it in focus as needed.
+
 Enter to log, escape to clear, tab to cycle fields.
 
 QCLog will warn on a duplicate entry (band/mode/call) and refuse to log
-incomplete entries or dupes unless you force-log (ctrl-escape).
+incomplete entries or dupes unless you force-log (ctrl-enter).
+
+Force-log will log an incomplete/invalid/duplicate/wildly incorrect entry. This
+can be used to take notes (editing previous entries is not possible, nor is
+undoing/deleting - just leave yourself something easy to grep for and
+clean it up later in the cabrillo)
 
 Right click any of the output fields (band/mode/frequency/operator) to change.
 
@@ -54,6 +66,10 @@ Logs are stored in a sqlite database with a relatively simple schema. Logs are
 also dumped to plain append-only log opened on startup for disaster recovery.
 
 Default directory for storing logs is `~/.qclog`. `-d`/`--data-dir` can change this.
+
+## Network
+Simple UDP IPv4 broadcast on port 14300. Syncs logs for dupe checking purposes.
+Title bar updates when another station logs an entry
 
 ## Log export
 The log DB engine (plain Python; no QT dependencies) supports some
