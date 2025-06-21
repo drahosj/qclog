@@ -48,11 +48,16 @@ class NetFunctions(QObject):
             if mtype == "qso":
                 print(f"\tReceived remote qso from {sender}")
                 qso = message["payload"]
+                if sender in self.heard_stations:
+                    qso['logged_by'] = self.heard_stations[sender]
+                else:
+                    qso['logged_by'] = sender
                 self.last_qso = qso
                 self.remoteQsoReceived.emit(qso)
             elif mtype == "heartbeat":
                 hb_id = message["payload"]["station_id"]
                 hb_name = message["payload"]["station_name"]
+                self.heard_stations[hb_id] = hb_name
                 print(f"\tHeartbeat: {hb_id} aka {hb_name}")
                 self.handle_heartbeat(datagram.senderAddress(), message["payload"])
             elif mtype == "resync_request":

@@ -76,14 +76,19 @@ Window {
 
     function updateTitleStatus() {
         console.log("Updating title status.")
-        var local_qso_call = logger.lastQso["callsign"];
-        var remote_qso_call = net.lastQso["callsign"];
+        var l_qso_call = logger.lastQso["callsign"];
+        var l_qso_ts = logger.lastQso["timestamp"];
+        var r_qso_call = net.lastQso["callsign"];
+        var r_qso_by = net.lastQso["logged_by"];
+        var r_qso_ts = net.lastQso["timestamp"];
         var t = baseTitle;
-        if (local_qso_call) {
-            t = `${t} - Logged ${local_qso_call}`
+        if (l_qso_call) {
+            l_qso_ts = l_qso_ts.split(' ')[1]
+            t = `${t} - Logged ${l_qso_call} at ${l_qso_ts}UTC`
         }
-        if (remote_qso_call) {
-            t = `${t} - ${remote_qso_call} logged by other station`
+        if (r_qso_call) {
+            r_qso_ts = r_qso_ts.split(' ')[1]
+            t = `${t} - ${r_qso_call} logged by ${r_qso_by} at ${r_qso_ts}UTC`
         }
         title = t
     }
