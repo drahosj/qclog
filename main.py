@@ -17,6 +17,7 @@ import qclog.fldigi
 import qclog.logger
 import qclog.flrig
 import qclog.net
+import qclog.hamlib
 
 from fldigiwrapper import FldigiWrapper
 from rigwrapper import RigWrapper
@@ -68,6 +69,8 @@ if __name__ == "__main__":
                         action='store_true')
     parser.add_argument('-d', '--data-dir', help='Directory for logs and db',
                         default=default_datadir)
+    parser.add_argument('--hamlib',
+                        help='Enable hamlib <model,port,baud>[,hamlib_opt...]')
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -97,6 +100,23 @@ if __name__ == "__main__":
     if args.flrig:
         rig = RigWrapper(qclog.flrig.Rig())
         context.setContextProperty("rig", rig)
+        rig.updatedRigData.connect(root.populateRigData)
+        rig.setStatus.connect(root.setStatus)
+        rig.clearStatus.connect(root.clearStatus)
+    elif args.hamlib is not None:
+        hamlib_args = args.hamlib.split(',')
+        if len(hamlib_args) < 3:
+            print("--hamlib requires at least model,ttypath,baud")
+            sys.exit(-1)
+        m = int(hamlib_args.pop(0))
+        p = hamlib_args.pop(0)
+        b = hamlib_args.pop(0)
+        conf = {}
+        for arg in hamlib_args:
+            k, v = arg.split("=")
+            conf[k] = v
+
+        rig = RigWrapper(qclog.hamlib.Rig(m, p, b, conf))
         rig.updatedRigData.connect(root.populateRigData)
         rig.setStatus.connect(root.setStatus)
         rig.clearStatus.connect(root.clearStatus)

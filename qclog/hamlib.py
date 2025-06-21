@@ -3,19 +3,26 @@
 import Hamlib
 
 class Rig:
-    def __init__(self, model, port, baud=38400, data_bits=8, stop_bits=1,
-                 parity='None', 
-                 handshake='None'):
+    def __init__(self, model, port, baud, opts={}):
         r = Hamlib.Rig(model)
         if r.this is None:
             raise Exception("Invalid rig model")
 
-        r.set_conf('rig_pathname', port)
-        r.set_conf('serial_speed', str(baud))
-        r.set_conf('data_bits', str(data_bits))
-        r.set_conf('stop_bits', str(stop_bits))
-        r.set_conf('serial_parity', str(parity))
-        r.set_conf('serial_handshake', str(handshake))
+        # Bring in mandator args
+        conf = {}
+        conf['rig_pathname'] = port
+        conf['serial_speed'] = str(baud)
+
+        # Set sane defaults
+        conf['data_bits'] = '8'
+        conf['stop_bits'] = '1'
+        conf['serial_parity'] = 'None'
+        conf['serial_handshake'] = 'None'
+
+        conf.update(opts)
+        for k, v in conf.items():
+            print(f"Setting conf {k} {v}")
+            r.set_conf(k, v)
 
         r.open()
 
