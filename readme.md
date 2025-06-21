@@ -72,9 +72,9 @@ can be chosen with `-i` (eg. POTA).
 Situation: FLDigi for digital modes station. Rig access needs to be shared
 between quicklog and fldigi.
 
-1: Start flrig and configure appropriately
-2: Start fldigi
-3: `./main.py fd -n 'Digital Modes Station' --flrig --fldigi`
+1. Start flrig and configure appropriately
+2. Start fldigi
+3. `./main.py fd -n 'Digital Modes Station' --flrig --fldigi`
 
 fldigi will be able to key the rig and populate frequency/mode/etc.
 QClog will populate band/mode/frequency from flrig (--flrig). When
