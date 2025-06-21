@@ -1,12 +1,19 @@
 # Quick Contest Log (QCLog)
 
 ## Installation
-The only dependency is PySide6. If you have a systemwide PySide6 installation,
+The only dependency is PySide6 (hamlib - optional). 
+If you have a systemwide PySide6 installation,
 it might work without any dependencies. Just clone the repo.
 
 `git clone https://github.com/drahosj/quicklog`
 
-Otherwise, you might need to install PySide6 in a virtualenv as follows:
+### Installing Dependencies System-Wide
+
+Debian: `# apt install python3-qtpy python3-hamlib`
+
+Fedora: `# dnf install python3-pyside6 python3-hamlib`
+
+### Installing dependencies in a virtualenv
 
 `cd quicklog`
 
@@ -16,7 +23,10 @@ Otherwise, you might need to install PySide6 in a virtualenv as follows:
 
 `pip install -r requirements.txt`
 
-It should be good to go.
+NOTE: Hamlib doesn't play nice with pip, hamlib probably won't work
+in a venv no matter what.
+
+
 
 ## Running
 From the QCLog directory
