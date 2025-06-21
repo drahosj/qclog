@@ -17,7 +17,6 @@ import qclog.fldigi
 import qclog.logger
 import qclog.flrig
 import qclog.net
-import qclog.hamlib
 
 from fldigiwrapper import FldigiWrapper
 from rigwrapper import RigWrapper
@@ -104,6 +103,7 @@ if __name__ == "__main__":
         rig.setStatus.connect(root.setStatus)
         rig.clearStatus.connect(root.clearStatus)
     elif args.hamlib is not None:
+        import qclog.hamlib
         hamlib_args = args.hamlib.split(',')
         if len(hamlib_args) < 3:
             print("--hamlib requires at least model,ttypath,baud")
