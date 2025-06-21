@@ -60,8 +60,12 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--mode')
     parser.add_argument('-f', '--frequency')
     parser.add_argument('-n', '--station-name')
-    parser.add_argument('--flrig', help='Enable flrig', action='store_true')
-    parser.add_argument('--fldigi', help='Enable flrig', action='store_true')
+    parser.add_argument('--flrig', 
+                        help='Enable flrig to populate rig data',
+                        action='store_true')
+    parser.add_argument('--fldigi',
+                        help='Automatically populate callsign from fldigi',
+                        action='store_true')
     parser.add_argument('-d', '--data-dir', help='Directory for logs and db',
                         default=default_datadir)
 

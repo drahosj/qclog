@@ -61,6 +61,36 @@ clean it up later in the cabrillo)
 
 Right click any of the output fields (band/mode/frequency/operator) to change.
 
+### Recommended Run Commands
+These will assume that "fd" is the name of the log you want to use (field day).
+Field day is the default logging interface. Other interfaces exist and
+can be chosen with `-i` (eg. POTA).
+
+
+
+### Running with FLDIGI for a digital station
+Situation: FLDigi for digital modes station. Rig access needs to be shared
+between quicklog and fldigi.
+
+1: Start flrig and configure appropriately
+2: Start fldigi
+3: `./main.py fd -n 'Digital Modes Station' --flrig --fldigi`
+
+fldigi will be able to key the rig and populate frequency/mode/etc.
+QClog will populate band/mode/frequency from flrig (--flrig). When
+you click on a callsign in fldigi, it will populate automatically in
+qclog and give you immediate dupe checking (--fldigi).
+
+### Phone/CW station
+NOTE: hamlib is definitely broken right now, doesn't work.
+
+Example situation: FT-450D connected via a DigiRig on /dev/ttyACM0.
+38400 baud, handshake has to be turned off in hamlib because RTS
+would otherwise key the rig constantly.
+
+`./main.py fd -n 'Phone Station' --hamlib
+1046,/dev/ttyUSB0,38400,serial_handshake=None,parity=None`
+
 ## Log storage
 Logs are stored in a sqlite database with a relatively simple schema. Logs are
 also dumped to plain append-only log opened on startup for disaster recovery.
