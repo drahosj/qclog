@@ -2,16 +2,15 @@
 
 # This Python file uses the following encoding: utf-8
 import sys
-import json
 import argparse
 import os
 import uuid
 
 from pathlib import Path
 
-from PySide6.QtCore import Signal, QObject, Slot, QThread, Property, QTimer
+from PySide6.QtCore import QObject, Property
 from PySide6.QtGui import QGuiApplication
-from PySide6.QtQml import QQmlApplicationEngine, QmlElement
+from PySide6.QtQml import QQmlApplicationEngine
 
 import qclog.fldigi
 import qclog.logger
@@ -22,23 +21,24 @@ from fldigiwrapper import FldigiWrapper
 from rigwrapper import RigWrapper
 from logwrapper import LoggerWrapper
 
-class GlobalValues(QObject):
+
+class QCLog(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.logger = None
         self.station_id = ""
         self.station_name = ""
         self.local_qso_count = 0
-        
+
     def getStationId(self):
         return self.station_id
-    
+
     def getStationName(self):
         return self.station_name
-    
+
     def setStationId(self, station_id):
         self.station_id = station_id
-        
+
     def setStationName(self, station_name):
         self.station_name = station_name
 
@@ -47,6 +47,7 @@ class GlobalValues(QObject):
 
     stationId = Property(str, getStationId, setStationId)
     stationName = Property(str, getStationName, setStationName)
+
 
 if __name__ == "__main__":
     default_datadir = Path(os.path.expanduser('~')) / '.qclog'
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--mode')
     parser.add_argument('-f', '--frequency')
     parser.add_argument('-n', '--station-name')
-    parser.add_argument('--flrig', 
+    parser.add_argument('--flrig',
                         help='Enable flrig to populate rig data',
                         action='store_true')
     parser.add_argument('--fldigi',
@@ -126,28 +127,28 @@ if __name__ == "__main__":
     if args.fldigi:
         fldigi = FldigiWrapper(qclog.fldigi.Fldigi())
         fldigi.logCallChanged.connect(root.setCall)
-        
-    gv = GlobalValues()
 
-    gv.station_id = logger.logger.get_setting("station_id")
-    if gv.station_id is None:
+    _qclog = QCLog()
+
+    _qclog.station_id = logger.logger.get_setting("station_id")
+    if _qclog.station_id is None:
         print("No station id found, generating...")
-        gv.station_id = str(uuid.uuid4())
-        logger.logger.set_setting("station_id", gv.station_id)
+        _qclog.station_id = str(uuid.uuid4())
+        logger.logger.set_setting("station_id", _qclog.station_id)
 
-    print(f"Station ID: {gv.station_id}")
-    
+    print(f"Station ID: {_qclog.station_id}")
+
     if args.station_name is not None:
         logger.logger.set_setting("station_name", args.station_name)
-        
-    logger.meta.update({"station_id": gv.station_id})
-    gv.logger = logger
-        
-    gv.station_name = logger.logger.get_setting("station_name")
-    if gv.station_name is None:
-        gv.station_name = gv.station_id
 
-    net_func = qclog.net.NetFunctions(gv)
+    logger.meta.update({"station_id": _qclog.station_id})
+    _qclog.logger = logger
+
+    _qclog.station_name = logger.logger.get_setting("station_name")
+    if _qclog.station_name is None:
+        _qclog.station_name = _qclog.station_id
+
+    net_func = qclog.net.NetFunctions(_qclog)
     net_func.start_listener()
     net_func.enable_heartbeat()
     net_func.send_heartbeat()
@@ -155,7 +156,7 @@ if __name__ == "__main__":
     net_func.remoteQsoReceived.connect(logger.log_remote)
     net_func.remoteQsoReceived.connect(root.remoteLogged)
     context.setContextProperty('net', net_func)
-    
+    context.setContextProperty('qclog', _qclog)
 
     root.setup(args.operator)
     sys.exit(app.exec())

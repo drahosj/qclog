@@ -1,7 +1,7 @@
 import json
 
 
-from PySide6.QtCore import Signal, QObject, QTimer, Property, Slot
+from PySide6.QtCore import Signal, QObject, QTimer, Property
 from PySide6.QtNetwork import QUdpSocket, QHostAddress, QNetworkDatagram
 from PySide6.QtNetwork import QAbstractSocket
 
@@ -9,11 +9,9 @@ from PySide6.QtNetwork import QAbstractSocket
 class NetFunctions(QObject):
     remoteQsoReceived = Signal(dict)
 
-    def __init__(self, gv, parent=None):
+    def __init__(self, qclog, parent=None):
         super().__init__(parent)
-        self.station_id = gv.station_id
-        self.station_name = gv.station_name
-        self.logger = gv.logger
+        self.qclog = qclog
 
         self.socket = QUdpSocket(self)
         self.socket.bind(QHostAddress.Any, 14300,
@@ -41,7 +39,7 @@ class NetFunctions(QObject):
             print(f"Sender: {datagram.senderAddress().toString()}")
             message = json.loads(datagram.data().data().decode())
             sender = message["sender"]
-            if sender == self.station_id:
+            if sender == self.qclog.station_id:
                 print("\tSkipping own datagram")
                 continue
             mtype = message["type"]
@@ -57,11 +55,10 @@ class NetFunctions(QObject):
             elif mtype == "heartbeat":
                 hb_id = message["payload"]["station_id"]
                 hb_name = message["payload"]["station_name"]
-                self.heard_stations[hb_id] = hb_name
                 print(f"\tHeartbeat: {hb_id} aka {hb_name}")
                 self.handle_heartbeat(datagram.senderAddress(), message["payload"])
             elif mtype == "resync_request":
-                print(f"\tReceived resync request")
+                print("\tReceived resync request")
                 self.handle_resync_request(datagram.senderAddress(), message)
             elif mtype == "qso_list":
                 self.handle_qso_list(datagram.senderAddress(), message)
@@ -74,9 +71,10 @@ class NetFunctions(QObject):
         print(f"\t\t{hb}")
         hb_id = hb["station_id"]
         hb_name = hb["station_name"]
+        self.heard_stations[hb_id] = hb_name
         hb_nqsos = hb["local_qso_count"]
         # TODO manage heard stations
-        logged_nqsos = self.logger.getRemoteCount(hb_id)
+        logged_nqsos = self.qclog.logger.getRemoteCount(hb_id)
         if hb_nqsos != logged_nqsos:
             print(f"\t\tQSO count mismatch - {logged_nqsos}/{hb_nqsos}")
             self.send_resync_request(address, hb_id)
@@ -86,7 +84,7 @@ class NetFunctions(QObject):
     def send_qso(self, qso, dest=QHostAddress.Broadcast):
         message = {
                 "type": "qso",
-                "sender": self.station_id,
+                "sender": self.qclog.station_id,
                 "payload": qso
                 }
         datagram = QNetworkDatagram()
@@ -103,11 +101,11 @@ class NetFunctions(QObject):
     def send_heartbeat(self):
         heartbeat = {
                 "type": "heartbeat",
-                "sender": self.station_id,
+                "sender": self.qclog.station_id,
                 "payload": {
-                    "station_id": self.station_id,
-                    "station_name": self.station_name,
-                    "local_qso_count": self.logger.getLocalCount()
+                    "station_id": self.qclog.station_id,
+                    "station_name": self.qclog.station_name,
+                    "local_qso_count": self.qclog.logger.getLocalCount()
                     }
                 }
         datagram = QNetworkDatagram()
@@ -119,7 +117,7 @@ class NetFunctions(QObject):
         print(f"\t\t\tSending resync request to {target}@{dest.toString()}")
         message = {
             "type": "resync_request",
-            "sender": self.station_id,
+            "sender": self.qclog.station_id,
             "target": target
             }
         datagram = QNetworkDatagram()
@@ -130,17 +128,17 @@ class NetFunctions(QObject):
         print(f"\t\t\tResync request sent\n")
 
     def handle_resync_request(self, dest, message):
-        if message["target"] != self.station_id:
+        if message["target"] != self.qclog.station_id:
             print("\t\tIt's not for us.")
             return
         sender = message["sender"]
         print(f"\t\tResync request from {sender}@{dest.toString()}")
-        local_qsos = self.logger.getQsoList()
+        local_qsos = self.qclog.logger.getQsoList()
         chunks = [local_qsos[i:i + 10] for i in range(0, len(local_qsos), 10)]
         for chunk in chunks:
             message = {
                 "type": "qso_list",
-                "sender": self.station_id,
+                "sender": self.qclog.station_id,
                 "payload": chunk}
             datagram = QNetworkDatagram()
             datagram.setData(json.dumps(message).encode())
@@ -154,7 +152,7 @@ class NetFunctions(QObject):
         print(f"\tQSO list received from {sender}")
         missing_list = []
         for qso in message["payload"]:
-            if self.logger.logger.get_qso(qso) is None:
+            if self.qclog.logger.logger.get_qso(qso) is None:
                 print(f"\t\t{qso} - MISSING")
                 missing_list.append(qso)
             else:
@@ -167,7 +165,7 @@ class NetFunctions(QObject):
         for chunk in chunks:
             message = {
                 "type": "qso_request",
-                "sender": self.station_id,
+                "sender": self.qclog.station_id,
                 "target": target,
                 "payload": chunk}
             datagram = QNetworkDatagram()
@@ -179,12 +177,12 @@ class NetFunctions(QObject):
 
     def handle_qso_request(self, dest, message):
         print("Handling QSO request")
-        if message["target"] != self.station_id:
-            print(f"\tIt isn't for us.")
+        if message["target"] != self.qclog.station_id:
+            print("\tIt isn't for us.")
             return
 
         for qso_id in message["payload"]:
-            qso = self.logger.logger.get_qso(qso_id)
+            qso = self.qclog.logger.logger.get_qso(qso_id)
             sender = message["sender"]
             if qso is None:
                 print(f"\tNonexistent QSO requested {qso_id}")

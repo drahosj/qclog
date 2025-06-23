@@ -112,6 +112,12 @@ Window {
         root.clear();
     }
 
+    function injectTestQso(call, exch) {
+        callIn.text = call;
+
+
+    }
+
     RowLayout {
         spacing: 0
 
@@ -186,9 +192,13 @@ Window {
         }
 
         Keys.onReturnPressed: (event) => {
+            var force = event.modifiers & Qt.ControlModifier;
+            handleReturnPressed(force);
+        }
+
+        function handleReturnPressed(force) {
             var exch = {};
             var call = callIn.text;
-            var force = event.modifiers & Qt.ControlModifier;
             if ((call != '') && (root.submit(exch) || force)) {
                 var meta = {operator: operatorOut.text,
                 frequency: frequencyOut.text};
