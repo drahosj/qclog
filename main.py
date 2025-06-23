@@ -5,10 +5,11 @@ import sys
 import argparse
 import os
 import uuid
+import random
 
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Property
+from PySide6.QtCore import QObject, Property, QTimer, Signal, Slot
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
@@ -23,6 +24,8 @@ from logwrapper import LoggerWrapper
 
 
 class QCLog(QObject):
+    testQso = Signal(str, dict)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.logger = None
@@ -44,6 +47,20 @@ class QCLog(QObject):
 
     def getLocalQsoCount(self):
         return self.logger.logger.local_count()
+
+    @Slot()
+    def makeTestQso(self):
+        if random.randint(0, 4) != 0:
+            return
+
+        prefixes = ['ad', 'w', 'wn', 'n', 'ke', 'kd', 'kf']
+        n = str(random.randint(0, 9))
+        suffix = ''
+        for i in range(random.randint(1, 3)):
+            suffix += chr(random.randint(0x41, 0x5a))
+        call = random.choice(prefixes) + n + suffix
+        print(f"Firing off a test QSO: {call}")
+        self.testQso.emit(call, {})
 
     stationId = Property(str, getStationId, setStationId)
     stationName = Property(str, getStationName, setStationName)
@@ -71,6 +88,8 @@ if __name__ == "__main__":
                         default=default_datadir)
     parser.add_argument('--hamlib',
                         help='Enable hamlib <model,port,baud>[,hamlib_opt...]')
+    parser.add_argument('--test', action='store_true',
+                        help='Enable test mode (generates qsos)')
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -157,6 +176,12 @@ if __name__ == "__main__":
     net_func.remoteQsoReceived.connect(root.remoteLogged)
     context.setContextProperty('net', net_func)
     context.setContextProperty('qclog', _qclog)
+
+    if args.test:
+        test_timer = QTimer(_qclog)
+        test_timer.timeout.connect(_qclog.makeTestQso)
+        _qclog.testQso.connect(root.injectTestQso)
+        test_timer.start(2000)
 
     root.setup(args.operator)
     sys.exit(app.exec())

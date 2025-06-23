@@ -114,12 +114,13 @@ Window {
 
     function injectTestQso(call, exch) {
         callIn.text = call;
-
-
+        // TODO implement exchange
+        entryRow.handleReturnPressed(true);
     }
 
     RowLayout {
         spacing: 0
+        id: entryRow
 
         OutputField {
             backgroundColor: 'green'
