@@ -95,7 +95,7 @@ class NetFunctions(QObject):
                 self.send_resync_request(address, hb_id)
                 self.last_resync = now
             else:
-                print("\t\t\tWaiting after last resync ({self.last_resync})")
+                print(f"\t\t\tWaiting after last resync ({self.last_resync})")
         else:
             print("\t\tQSO counts agree, no resync needed")
 
