@@ -195,6 +195,7 @@ Window {
         Keys.onReturnPressed: (event) => {
             var force = event.modifiers & Qt.ControlModifier;
             handleReturnPressed(force);
+            event.accepted = true;
         }
 
         function handleReturnPressed(force) {
@@ -212,7 +213,6 @@ Window {
                 JSON.stringify(exch),
                 JSON.stringify(meta), force);
             }
-            event.accepted = true;
         }
 
         Keys.onEscapePressed: (event) => {

@@ -1,7 +1,9 @@
 import json
+from datetime import datetime, timedelta
+from collections import deque
 
 
-from PySide6.QtCore import Signal, QObject, QTimer, Property
+from PySide6.QtCore import Signal, QObject, QTimer, Property, Slot, QTimer
 from PySide6.QtNetwork import QUdpSocket, QHostAddress, QNetworkDatagram
 from PySide6.QtNetwork import QAbstractSocket
 
@@ -19,9 +21,13 @@ class NetFunctions(QObject):
                          QAbstractSocket.ReuseAddressHint)
         self.last_qso = {}
         self.heard_stations = {}
+        self.last_resync = None
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.sendNextDatagram)
+        self.timer.start(1000)
+        self.queue = deque()
 
     def getLastQso(self):
-        print(f"net.getLastQso: {self.last_qso}")
         return self.last_qso
 
     def getHeardStations(self):
@@ -29,6 +35,11 @@ class NetFunctions(QObject):
 
     lastQso = Property(dict, getLastQso)
     heardStations = Property(dict, getHeardStations)
+
+    @Slot()
+    def sendNextDatagram(self):
+        if len(self.queue) > 0:
+            self.socket.writeDatagram(self.queue.popleft())
 
     def start_listener(self):
         self.socket.readyRead.connect(self.read_datagram)
@@ -77,7 +88,14 @@ class NetFunctions(QObject):
         logged_nqsos = self.qclog.logger.getRemoteCount(hb_id)
         if hb_nqsos != logged_nqsos:
             print(f"\t\tQSO count mismatch - {logged_nqsos}/{hb_nqsos}")
-            self.send_resync_request(address, hb_id)
+            min_delta = timedelta(minutes=2)
+            now = datetime.now()
+            if self.last_resync is None or now - self.last_resync > min_delta:
+                print("\t\t\tStarting a resync request")
+                self.send_resync_request(address, hb_id)
+                self.last_resync = now
+            else:
+                print("\t\t\tWaiting after last resync ({self.last_resync})")
         else:
             print("\t\tQSO counts agree, no resync needed")
 
@@ -91,7 +109,7 @@ class NetFunctions(QObject):
         datagram.setData(json.dumps(message).encode())
         print(f"Sending qso broadcast for {message["payload"]["id"]}")
         datagram.setDestination(dest, 14300)
-        self.socket.writeDatagram(datagram)
+        self.queue.append(datagram)
 
     def enable_heartbeat(self):
         self.timer = QTimer(self)
@@ -111,7 +129,7 @@ class NetFunctions(QObject):
         datagram = QNetworkDatagram()
         datagram.setData(json.dumps(heartbeat).encode())
         datagram.setDestination(QHostAddress.Broadcast, 14300)
-        self.socket.writeDatagram(datagram)
+        self.queue.append(datagram)
 
     def send_resync_request(self, dest, target):
         print(f"\t\t\tSending resync request to {target}@{dest.toString()}")
@@ -124,7 +142,7 @@ class NetFunctions(QObject):
         datagram.setData(json.dumps(message).encode())
         #datagram.setDestination(dest, 14300)
         datagram.setDestination(QHostAddress.Broadcast, 14300)
-        self.socket.writeDatagram(datagram)
+        self.queue.append(datagram)
         print(f"\t\t\tResync request sent\n")
 
     def handle_resync_request(self, dest, message):
@@ -144,7 +162,7 @@ class NetFunctions(QObject):
             datagram.setData(json.dumps(message).encode())
             #datagram.setDestination(dest, 14300)
             datagram.setDestination(QHostAddress.Broadcast, 14300)
-            self.socket.writeDatagram(datagram)
+            self.queue.append(datagram)
             print(f"\t\t\tQSO list chunk sent ({len(chunk)})")
 
     def handle_qso_list(self, dest, message):
@@ -172,7 +190,7 @@ class NetFunctions(QObject):
             datagram.setData(json.dumps(message).encode())
             #datagram.setDestination(dest, 14300)
             datagram.setDestination(QHostAddress.Broadcast, 14300)
-            self.socket.writeDatagram(datagram)
+            self.queue.append(datagram)
             print(f"\t\t\tQSO request chunk sent ({len(chunk)})")
 
     def handle_qso_request(self, dest, message):
