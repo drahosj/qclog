@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from collections import deque
 
 
-from PySide6.QtCore import Signal, QObject, QTimer, Property, Slot, QTimer
+from PySide6.QtCore import Signal, QObject, QTimer, Property, Slot
 from PySide6.QtNetwork import QUdpSocket, QHostAddress, QNetworkDatagram
 from PySide6.QtNetwork import QAbstractSocket
 
@@ -24,7 +24,7 @@ class NetFunctions(QObject):
         self.last_resync = None
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.sendNextDatagram)
-        self.timer.start(1000)
+        self.timer.start(10)
         self.queue = deque()
 
     def getLastQso(self):

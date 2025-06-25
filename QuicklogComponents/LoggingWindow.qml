@@ -10,7 +10,7 @@ Window {
     height: 45
     visible: true
     property string baseTitle: qsTr("Minimal Logger")
-    title: baseTitle
+    title: updateTitleStatus()
 
     default property alias fields: logFields.data
 
@@ -81,7 +81,7 @@ Window {
         var r_qso_call = net.lastQso["callsign"];
         var r_qso_by = net.lastQso["logged_by"];
         var r_qso_ts = net.lastQso["timestamp"];
-        var t = baseTitle;
+        var t = `${baseTitle} (${qclog.stationName})`;
         if (l_qso_call) {
             l_qso_ts = l_qso_ts.split(' ')[1]
             t = `${t} - Logged ${l_qso_call} at ${l_qso_ts}UTC`
