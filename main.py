@@ -67,7 +67,10 @@ class QCLog(QObject):
 
 
 if __name__ == "__main__":
-    default_datadir = Path(os.path.expanduser('~')) / '.qclog'
+    if 'XDG_DATA_HOME' in os.environ:
+        default_datadir = os.environ['XDG_DATA_HOME']
+    else:
+        default_datadir = Path(os.path.expanduser('~')) / '.local/share/qclog'
 
     parser = argparse.ArgumentParser()
     parser.add_argument('log', help='Name of database and log files',

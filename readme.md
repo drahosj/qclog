@@ -95,7 +95,7 @@ would otherwise key the rig constantly.
 Logs are stored in a sqlite database with a relatively simple schema. Logs are
 also dumped to plain append-only log opened on startup for disaster recovery.
 
-Default directory for storing logs is `~/.qclog`. `-d`/`--data-dir` can change this.
+Default directory for storing logs is `$XDG_DATA_HOME/qclog`. `-d`/`--data-dir` can change this.
 
 ## Network
 Simple UDP IPv4 broadcast on port 14300. Syncs logs for dupe checking purposes.
@@ -104,7 +104,7 @@ Title bar updates when another station logs an entry
 ## Log export
 The log DB engine (plain Python; no QT dependencies) supports some
 useful functionality on its own. You can dump logs from the log directory 
-(default `~/.qclog`):
+(default `$XDG_DATA_HOME/qclog`):
 
 `/path/to/logger.py -l <logname>`
 
