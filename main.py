@@ -187,4 +187,5 @@ if __name__ == "__main__":
         test_timer.start(2000)
 
     root.setup(args.operator)
+    root.updateTitleStatus()
     sys.exit(app.exec())

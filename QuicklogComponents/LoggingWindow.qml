@@ -10,7 +10,7 @@ Window {
     height: 45
     visible: true
     property string baseTitle: qsTr("Minimal Logger")
-    title: updateTitleStatus()
+    title: baseTitle
 
     default property alias fields: logFields.data
 
