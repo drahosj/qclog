@@ -91,6 +91,7 @@ if __name__ == "__main__":
                         default=default_datadir)
     parser.add_argument('--hamlib',
                         help='Enable hamlib <model,port,baud>[,hamlib_opt...]')
+    parser.add_argument('--rigctld', help='Connect to local rigctld on <port>')
     parser.add_argument('--test', action='store_true',
                         help='Enable test mode (generates qsos)')
 
@@ -140,6 +141,12 @@ if __name__ == "__main__":
             conf[k] = v
 
         rig = RigWrapper(qclog.hamlib.Rig(m, p, b, conf))
+        rig.updatedRigData.connect(root.populateRigData)
+        rig.setStatus.connect(root.setStatus)
+        rig.clearStatus.connect(root.clearStatus)
+    elif args.rigctld is not None:
+        import qclog.rigctld
+        rig = RigWrapper(qclog.rigctld.Rig(int(args.rigctld)))
         rig.updatedRigData.connect(root.populateRigData)
         rig.setStatus.connect(root.setStatus)
         rig.clearStatus.connect(root.clearStatus)

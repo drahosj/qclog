@@ -4,10 +4,6 @@ import Hamlib
 
 class Rig:
     def __init__(self, model, port, baud, opts={}):
-        r = Hamlib.Rig(model)
-        if r.this is None:
-            raise Exception("Invalid rig model")
-
         # Bring in mandator args
         conf = {}
         conf['rig_pathname'] = port
@@ -18,22 +14,34 @@ class Rig:
         conf['stop_bits'] = '1'
         conf['serial_parity'] = 'None'
         conf['serial_handshake'] = 'None'
-        conf['rts_state'] = 'Off'
-        conf['dtr_state'] = 'Off'
+        conf['rts_state'] = 'OFF'
+        conf['dtr_state'] = 'OFF'
 
         conf.update(opts)
-        for k, v in conf.items():
+        self.conf = conf
+        self.model = model
+
+    def start(self):
+        r = Hamlib.Rig(self.model)
+        if r.this is None:
+            raise Exception("Invalid rig model")
+
+        for k, v in self.conf.items():
             print(f"Setting conf {k} {v}")
             r.set_conf(k, v)
 
-        r.open()
-
         if r.error_status:
             raise Exception(Hamlib.rigerror2(r.error_state))
+
+        r.open()
+        
         self.rig = r
+        print("rig started")
 
     def get_freq(self):
-        return int(self.rig.get_freq())
+        f = int(self.rig.get_freq())
+        print(f"get_freq{f}")
+        return f
 
     def get_mode(self):
         return mode_map[self.rig.get_mode()[0]]
@@ -45,11 +53,11 @@ class Rig:
             return "160M"
         elif f in range(3500000, 4000001):
             return "80M"
-        elif f in range(7000000, 7000301):
+        elif f in range(7000000, 7301000):
             return "40M"
-        elif f in range(14000000, 14000351):
+        elif f in range(14000000, 14351000):
             return "20M"
-        elif f in range(21000000, 21000451):
+        elif f in range(21000000, 21451000):
             return "15M"
         elif f in range(28000000, 29700001):
             return "10M"

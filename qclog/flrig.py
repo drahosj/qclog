@@ -6,6 +6,9 @@ class Rig:
     def __init__(self, host='127.0.0.01', port='12345'):
         self.server = xmlrpc.client.ServerProxy(f"http://%s:%s" % (host, port))
 
+    def start(self):
+        pass
+
     def get_freq(self):
         try:
             print("Updating frequency from rig")

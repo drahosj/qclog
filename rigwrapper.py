@@ -2,6 +2,9 @@ from PySide6.QtCore import Signal, QObject, Slot, QThread, Property, QTimer
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, QmlElement
 
+from qclog.flrig import RigCommError
+
+
 class RigWrapper(QObject):
     updatedRigData = Signal(str, str, str)
     setStatus = Signal(str)
@@ -38,16 +41,24 @@ class RigWorker(QObject):
     def __init__(self, rig, parent=None):
         super().__init__(parent)
         self.rig = rig
+        self.started = False
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.workerUpdate)
         self.timer.start(2000)
 
+    def start(self):
+        self.rig.start()
+
     @Slot()
     def workerUpdate(self):
+        if not self.started:
+            self.start()
+            self.started = True
+
         try:
+            freq = str(self.rig.get_freq())
             band = self.rig.get_band()
             mode = self.rig.get_mode()
-            freq = str(self.rig.get_freq())
             self.updatedRigData.emit(band, mode, freq)
-        except flrig.RigCommError as e:
+        except RigCommError as e:
             self.rigError.emit()
