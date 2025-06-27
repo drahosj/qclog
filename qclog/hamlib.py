@@ -18,6 +18,8 @@ class Rig:
         conf['stop_bits'] = '1'
         conf['serial_parity'] = 'None'
         conf['serial_handshake'] = 'None'
+        conf['rts_state'] = 'Off'
+        conf['dtr_state'] = 'Off'
 
         conf.update(opts)
         for k, v in conf.items():
