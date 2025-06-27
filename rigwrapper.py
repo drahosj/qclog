@@ -21,8 +21,13 @@ class RigWrapper(QObject):
         self.triggerWorker.connect(self.worker.workerUpdate)
         self.workerThread.start()
 
+        self.watchdog = QTimer(self)
+        self.watchdog.timeout.connect(self.setRigError)
+        self.watchdog.start(4000)
+
     @Slot(str, str, str)
     def dataFromWorker(self, band, mode, freq):
+        self.watchdog.start(4000)
         self.updatedRigData.emit(band, mode, freq)
         self.clearStatus.emit('rigerror')
 
