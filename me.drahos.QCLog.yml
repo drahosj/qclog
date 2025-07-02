@@ -1,0 +1,25 @@
+id: me.drahos.QCLog
+runtime: org.kde.Platform
+runtime-version: '6.8'
+base: io.qt.PySide.BaseApp
+base-version: '6.8'
+sdk: org.kde.Sdk
+command: run.sh
+modules:
+    -   name: qclog
+        buildsystem: simple
+        build-commands:
+            - install -Dm755 run.sh /app/bin/run.sh
+            - cp -r qclog /app/qclog
+        sources:
+            -   type: git
+                url: https://github.com/drahosj/qclog
+                commit: 8da39febee7a9868069bf4c9d20bc5e6f1eedf5d
+                dest: qclog
+            -   type: script
+                dest-filename: run.sh
+                commands:
+                    - cd /app/qclog && ./main.py "$@"
+finish-args:
+    - --share=network
+    - --socket=fallback-x11

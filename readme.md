@@ -1,7 +1,7 @@
-# Quick Contest Log (QCLog)
+# Quick Contest Log (QCLog) (next section)
 
 ## Installation
-The only dependency is PySide6 (hamlib - optional). 
+The only dependency is PySide6 (hamlib - sad and **BROKEN** so don't worry about it). 
 If you have a systemwide PySide6 installation,
 it might work without any dependencies. Just clone the repo.
 
@@ -9,9 +9,10 @@ it might work without any dependencies. Just clone the repo.
 
 ### Installing Dependencies System-Wide
 
-Debian: `# apt install python3-qtpy python3-hamlib`
+Fedora: `# dnf install python3-pyside6`
 
-Fedora: `# dnf install python3-pyside6 python3-hamlib`
+**NOTE**: deb-based distros don't seem to package pyside6 system-wide,
+so a virtualenv is recommended (next section)
 
 ### Installing dependencies in a virtualenv
 
@@ -27,6 +28,20 @@ Remember to activate the venv before trying to run qclog.
 
 NOTE: Hamlib doesn't play nice with pip, hamlib probably won't work
 in a venv no matter what.
+
+### Flatpak
+**BETA** - Stuff might not work (networking?)
+
+Not published on flathub (yet). Build it locally:
+
+`flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir me.drahos.QCLog.yml`
+
+Run like a normal flatpak:
+
+`flatpak run me.drahos.QCLog <args>`
+
+Data ends up in `$HOME/.var/app/me.drahos.QCLog/data` (you can point --data-dir
+at this to do log exports etc. from the non-flatpak version)
 
 ## Running
 From the QCLog directory
@@ -133,3 +148,6 @@ with frequency, mode, date, time, and then (as specified by the template string)
 mycall, myclass, mysection (in the template string, these are constants) and
 then the call, class, and section taken from the QSO. The logs will be exported
 from fd.db
+
+## License ##
+BSD 2-Clause
