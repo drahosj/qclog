@@ -107,7 +107,6 @@ if __name__ == "__main__":
     root = engine.rootObjects()[0]
     context = engine.rootContext()
 
-    print(f"Storing logs in {args.data_dir}.")
     if not os.path.exists(args.data_dir):
         print(f"{args.data_dir} doesn't exist, creating.")
         os.makedirs(args.data_dir)
@@ -121,6 +120,8 @@ if __name__ == "__main__":
         mycall, mypark = args.adif.split(':')
         logger.logger.adif(mycall, mypark)
         exit()
+
+    print(f"Storing logs in {args.data_dir}.")
 
     context.setContextProperty("logger", logger)
     logger.setStatus.connect(root.setStatus)
