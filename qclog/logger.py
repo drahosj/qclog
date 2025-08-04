@@ -4,13 +4,28 @@ import sqlite3
 import uuid
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 
-class Logger:
-    default_datadir = Path(os.path.expanduser('~')) / '.qclog'
+if 'XDG_DATA_HOME' in os.environ:
+    default_datadir = Path(os.environ['XDG_DATA_HOME']) / 'qclog'
+else:
+    default_datadir = Path(os.path.expanduser('~')) / '.local/share/qclog'
 
+def adif_pack(field, value):
+    return f"<{field}:{len(value)}>{value}"
+
+def adif_pack_date(d):
+    return f"{d.year:04}{d.month:02}{d.day:02}"
+
+def adif_pack_time(t):
+    return f"{t.hour:02}{t.minute:02}{t.second:02}"
+
+def adif_pack_datetime(dt):
+    return f"{adif_pack_date(dt)} {adif_pack_time(dt)}"
+
+class Logger:
     def __init__(self, logname, datadir=default_datadir):
         self.conn = sqlite3.connect(datadir / f"{logname}.db")
         cur = self.conn.cursor()
@@ -183,6 +198,30 @@ class Logger:
         print("Timestamp\tBand\tMode\tCallsign\tExch")
         for row in cur.execute("SELECT * FROM log;"):
             print(f"{row[1]}\t{row[3]}\t{row[4]}\t{row[2]}\t{row[5]}")
+        cur.close()
+
+# POTA-specific
+    def adif(self, mycall, mypark):
+        print(adif_pack("PROGRAMID", "QCLog"))
+        print(adif_pack("PROGRAMVERSION", "QCLog"))
+        print(adif_pack("CREATED_AT",
+                        adif_pack_datetime(datetime.now(tz=timezone.utc))))
+        print("<EOH>")
+        cur = self.conn.cursor()
+        for row in cur.execute(""" SELECT
+                callsign, timestamp, band, mode, exchange
+            FROM log
+            ORDER BY timestamp ASC;"""):
+            print(adif_pack("STATION_CALLSIGN", mycall))
+            print(adif_pack("CALL", row[0]))
+            ts = datetime.fromisoformat(row[1])
+            print(adif_pack("QSO_DATE", adif_pack_date(ts)))
+            print(adif_pack("TIME_ON", adif_pack_time(ts)))
+            print(adif_pack("MY_SIG", "POTA"))
+            print(adif_pack("MY_SIG_INFO", mypark))
+            #TODO park2park
+            print("<EOR>")
+
 
     def get_qso_list(self):
         cur = self.conn.cursor()
