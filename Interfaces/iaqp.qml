@@ -6,9 +6,16 @@ LoggingWindow {
     title: qsTr("IAQP Logging")
 
     LogField {
-        id: rstIn
-        placeholderText: 'RST'
+        id: rstSentIn
+        placeholderText: 'RST sent'
         backgroundColor: 'purple'
+        Layout.minimumWidth: 140
+    }
+
+    LogField {
+        id: rstRcvdIn
+        placeholderText: 'RST rcvd'
+        backgroundColor: 'blue'
         Layout.minimumWidth: 140
     }
 
@@ -27,10 +34,11 @@ LoggingWindow {
     }
 
     function submit(exch) {
-        exch['rst'] = rstIn.text;
+        exch['rstsent'] = rstSentIn.text;
+        exch['rstrcvd'] = rstRcvdIn.text;
         exch['state'] = stateIn.text;
         exch['county'] = countyIn.text;
-        if (exch['state'] == "" || exch['rst'] == "") {
+        if (exch['state'] == "" || exch['rstsent'] == "" || exch['rstrcvd'] == "") {
             root.setStatus("incomplete");
             return false;
         }
@@ -38,7 +46,8 @@ LoggingWindow {
     }
 
     function clear() {
-        rstIn.text = '';
+        rstSentIn.text = '';
+        rstRcvdIn.text = '';
         stateIn.text = '';
         countyIn.text = '';
     }
