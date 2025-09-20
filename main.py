@@ -154,8 +154,12 @@ if __name__ == "__main__":
         rig.setStatus.connect(root.setStatus)
         rig.clearStatus.connect(root.clearStatus)
     elif args.rigctld is not None:
+        port = args.rigctld
+        if port == 'default':
+            port = 4532
+
         import qclog.rigctld
-        rig = RigWrapper(qclog.rigctld.Rig(int(args.rigctld)))
+        rig = RigWrapper(qclog.rigctld.Rig(int(port)))
         rig.updatedRigData.connect(root.populateRigData)
         rig.setStatus.connect(root.setStatus)
         rig.clearStatus.connect(root.clearStatus)
@@ -184,7 +188,12 @@ if __name__ == "__main__":
 
     _qclog.station_name = logger.logger.get_setting("station_name")
     if _qclog.station_name is None:
-        _qclog.station_name = _qclog.station_id
+        from socket import gethostname
+        hostname = gethostname()
+        if hostname is not None and hostname != '':
+            _qclog.station_name = hostname
+        else:
+            _qclog.station_name = _qclog.station_id
 
     net_func = qclog.net.NetFunctions(_qclog)
     net_func.start_listener()

@@ -7,20 +7,29 @@ LoggingWindow {
 
     LogField {
         id: rstIn
-        text: '599'
         placeholderText: 'RST'
-        backgroundColor: 'plum'
+        backgroundColor: 'purple'
+        Layout.minimumWidth: 140
     }
 
     LogField {
         id: stateIn
-        placeholderText: 'STATE/COUNTY/DX'
+        placeholderText: 'STATE'
         backgroundColor: 'teal'
+        Layout.minimumWidth: 120
+    }
+
+    LogField {
+        id: countyIn
+        placeholderText: 'COUNTY'
+        backgroundColor: 'plum'
+        Layout.minimumWidth: 240
     }
 
     function submit(exch) {
         exch['rst'] = rstIn.text;
         exch['state'] = stateIn.text;
+        exch['county'] = countyIn.text;
         if (exch['state'] == "" || exch['rst'] == "") {
             root.setStatus("incomplete");
             return false;
@@ -29,7 +38,8 @@ LoggingWindow {
     }
 
     function clear() {
-        rstIn.text = '599';
+        rstIn.text = '';
         stateIn.text = '';
+        countyIn.text = '';
     }
 }
