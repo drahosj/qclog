@@ -67,11 +67,6 @@ class QCLog(QObject):
 
 
 if __name__ == "__main__":
-    if 'XDG_DATA_HOME' in os.environ:
-        default_datadir = os.environ['XDG_DATA_HOME']
-    else:
-        default_datadir = Path(os.path.expanduser('~')) / '.local/share/qclog'
-
     parser = argparse.ArgumentParser()
     parser.add_argument('log', help='Name of database and log files',
                         default='qclog-defaultlog')
@@ -88,12 +83,16 @@ if __name__ == "__main__":
                         help='Automatically populate callsign from fldigi',
                         action='store_true')
     parser.add_argument('-d', '--data-dir', help='Directory for logs and db',
-                        default=default_datadir)
+                        default=qclog.logger.default_datadir)
     parser.add_argument('--hamlib',
                         help='Enable hamlib <model,port,baud>[,hamlib_opt...]')
     parser.add_argument('--rigctld', help='Connect to local rigctld on <port>')
     parser.add_argument('--test', action='store_true',
                         help='Enable test mode (generates qsos)')
+    parser.add_argument('--dump-log', help='Dump log and exit.',
+                        action='store_true')
+    parser.add_argument('--adif', help='Dump adif and exit.', 
+                        metavar='MYCALL:MYPARK')
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -108,12 +107,22 @@ if __name__ == "__main__":
     root = engine.rootObjects()[0]
     context = engine.rootContext()
 
-    print(f"Storing logs in {args.data_dir}.")
     if not os.path.exists(args.data_dir):
         print(f"{args.data_dir} doesn't exist, creating.")
         os.makedirs(args.data_dir)
 
     logger = LoggerWrapper(qclog.logger.Logger(args.log, Path(args.data_dir)))
+    if args.dump_log:
+        logger.logger.dump_log()
+        exit()
+
+    if args.adif:
+        mycall, mypark = args.adif.split(':')
+        logger.logger.adif(mycall, mypark)
+        exit()
+
+    print(f"Storing logs in {args.data_dir}.")
+
     context.setContextProperty("logger", logger)
     logger.setStatus.connect(root.setStatus)
     logger.clearStatus.connect(root.clearStatus)
