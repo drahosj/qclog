@@ -289,7 +289,9 @@ class Logger:
     def cabrillo(self, exchfmt):
         cur = self.conn.cursor()
         qsos = []
-        for row in cur.execute("SELECT * FROM log;"):
+        for row in cur.execute("""SELECT 
+                id, timestamp, callsign, band, mode, exchange, meta
+                FROM log ORDER BY timestamp ASC;"""):
             dt = datetime.fromisoformat(row[1])
             date = dt.date().isoformat()
             time = dt.time().strftime("%H%M")
