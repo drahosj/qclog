@@ -10,6 +10,7 @@ LoggingWindow {
         placeholderText: 'RST sent'
         backgroundColor: 'purple'
         Layout.minimumWidth: 140
+        defaultValue: '59'
     }
 
     LogField {
@@ -17,6 +18,7 @@ LoggingWindow {
         placeholderText: 'RST rcvd'
         backgroundColor: 'blue'
         Layout.minimumWidth: 140
+        defaultValue: '59'
     }
 
     LogField {
@@ -38,17 +40,23 @@ LoggingWindow {
         exch['rstrcvd'] = rstRcvdIn.text;
         exch['state'] = stateIn.text;
         exch['county'] = countyIn.text;
-        if (exch['state'] == "" || exch['rstsent'] == "" || exch['rstrcvd'] == "") {
+        if (exch['state'] == "") {
             root.setStatus("incomplete");
             return false;
+        }
+        if (exch['rstsent'] = "") {
+            exch['rstsent'] = "59";
+        }
+        if (exch['rstrcvd'] = "") {
+            exch['rstrcvd'] = "59";
         }
         return true;
     }
 
     function clear() {
-        rstSentIn.text = '';
-        rstRcvdIn.text = '';
-        stateIn.text = '';
-        countyIn.text = '';
+        rstSentIn.text = rstSentIn.defaultValue;
+        rstRcvdIn.text = rstRcvdIn.defaultValue;
+        stateIn.text = stateIn.defaultValue;
+        countyIn.text = countyIn.defaultValue;
     }
 }

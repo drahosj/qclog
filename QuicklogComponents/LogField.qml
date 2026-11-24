@@ -8,10 +8,13 @@ TextField {
     property color bgActive
     property color bgInactive
     property string exchangeTag
+    property string defaultValue: ''
 
     exchangeTag: ''
     bgActive: 'lightblue'
     bgInactive: 'grey'
+
+    text: defaultValue
 
     Layout.minimumHeight: parent.height
     Layout.margins: 0
@@ -21,5 +24,16 @@ TextField {
     placeholderTextColor: 'white'
     background: Rectangle {
         color: root.cursorVisible ? bgActive : bgInactive
+    }
+
+    onActiveFocusChanged: {
+        if (defaultValue != '') {
+            if (activeFocus && text == defaultValue) {
+                text = '';
+            }
+            if (!activeFocus && text == '') {
+                text = defaultValue;
+            }
+        }
     }
 }

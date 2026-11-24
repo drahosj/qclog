@@ -217,7 +217,7 @@ class Logger:
             ts = datetime.fromisoformat(row[1])
             print(adif_pack("QSO_DATE", adif_pack_date(ts)))
             print(adif_pack("TIME_ON", adif_pack_time(ts)))
-            band = f"{row[2]}M"
+            band = f"{row[2]}"
             print(adif_pack("BAND", band))
             mode = f"{row[3]}"
             if mode == 'USB' or mode == 'LSB':
@@ -225,7 +225,13 @@ class Logger:
             print(adif_pack("MODE", mode))
             print(adif_pack("MY_SIG", "POTA"))
             print(adif_pack("MY_SIG_INFO", mypark))
-            #TODO park2park
+
+            if row[4] is not None:
+                exch = json.loads(row[4])
+                if exch["p2p_park"] != '':
+                    print(adif_pack("SIG", "POTA"))
+                    print(adif_pack("SIG_INFO", exch["p2p_park"]))
+
             print("<EOR>")
 
 

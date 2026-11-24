@@ -38,6 +38,8 @@ class Rig:
             return "40M"
         elif f in range(14000000, 14351000):
             return "20M"
+        elif f in range(18068000, 18168001):
+            return "17M"
         elif f in range(21000000, 21451000):
             return "15M"
         elif f in range(28000000, 29700001):
