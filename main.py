@@ -22,6 +22,8 @@ from fldigiwrapper import FldigiWrapper
 from rigwrapper import RigWrapper
 from logwrapper import LoggerWrapper
 
+import build.qclog.loggercore.libloggercoreplugin
+
 
 class QCLog(QObject):
     testQso = Signal(str, dict)
@@ -98,6 +100,7 @@ if __name__ == "__main__":
 
     app = QGuiApplication(sys.argv)
     engine = QQmlApplicationEngine()
+    engine.addImportPath("./build/")
     iface_dir =  Path(__file__).resolve().parent / "Interfaces"
     qml_file = iface_dir / f"{args.interface}.qml"
     engine.load(qml_file)

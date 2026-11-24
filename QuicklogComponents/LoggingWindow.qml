@@ -4,6 +4,8 @@ import QtQuick.Controls
 import "."
 import "../helpers.js" as Helpers
 
+import qclog.loggercore
+
 Window {
     id: root
     width: 1400

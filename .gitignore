@@ -4,3 +4,4 @@ venv
 *.db
 *.disaster_log
 __pycache__
+build

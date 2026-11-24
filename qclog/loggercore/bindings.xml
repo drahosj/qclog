@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<typesystem package="qclog">
+    <object-type name="LoggerCore">
+        <property type="std::string" name="name" get="name" />
+    </object-type>
+</typesystem>
